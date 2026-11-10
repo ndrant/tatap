@@ -12,6 +12,10 @@ dist/
 # Internal/local-only:
 # - plan.md: working doc pribadi
 plan.md
+.superpowers/
+data/*.sqlite*
+data/cache/
+php_dist/
 .gradle/
 build/
 **/build/

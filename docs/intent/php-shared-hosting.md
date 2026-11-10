@@ -1,0 +1,8 @@
+# Statement of Intent: PHP Shared Hosting Edition & Deployment Tool
+
+- **Outcome**: A standalone PHP-based backend and distribution package for Tatap that can be uploaded and run on standard shared hosting (cPanel, Apache, LiteSpeed) with zero external dependencies (no Composer, no Python needed on the server), accompanied by a packaging and auto-deploy CLI tool (`tools/build_php_web.py` with `--deploy-ftp`).
+- **User**: Users and webmasters who want to host their own public or personal Tatap anime web streaming portal on cheap, standard PHP shared hosting without needing a VPS, Docker, or root access.
+- **Why now**: Tatap currently requires a Python runtime (FastAPI), making it impossible to deploy on standard shared hosting environments that only support PHP.
+- **Success**: Extracting the generated `tatap-web-php.zip` (or running `--deploy-ftp`) on a shared hosting account immediately yields a fully functioning web app at root or subfolder, capable of searching, browsing AniList catalog, playing HiAnime (sub/dub) and Otakudesu streams with subtitle translation and AniSkip, and maintaining private watch history/bookmarks per visitor.
+- **Constraint**: Pure vanilla PHP (compatible with PHP 7.4–8.3+), using only standard extensions (`curl`, `pdo_sqlite`, `openssl`, `json`, `mbstring`), zero Composer requirement on the server, strict `.htaccess` protection for the SQLite database, and without altering or breaking existing Python/Android/Desktop runtimes.
+- **Out of scope**: Rewriting the desktop or Android app to use PHP, secondary scrapers (AniChan, AnimeTosho, OpenSubtitles, BYOK LLM AI Fansub) in the initial release, or requiring MySQL/MariaDB configuration.
