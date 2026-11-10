@@ -15,6 +15,7 @@ require_once __DIR__ . '/user/Bookmarks.php';
 require_once __DIR__ . '/user/Settings.php';
 require_once __DIR__ . '/scrapers/Anilist.php';
 require_once __DIR__ . '/scrapers/Hianime.php';
+require_once __DIR__ . '/scrapers/Otakudesu.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
@@ -25,6 +26,7 @@ use Tatap\User\Bookmarks;
 use Tatap\User\Settings;
 use Tatap\Scrapers\Anilist;
 use Tatap\Scrapers\Hianime;
+use Tatap\Scrapers\Otakudesu;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -263,8 +265,17 @@ $router->add('GET', '/api/episode', function() {
     $ep = max(1, (int)($_GET['ep'] ?? 1));
     $mode = (string)($_GET['mode'] ?? 'sub');
     $server = (string)($_GET['server'] ?? '');
+    $source = strtolower((string)($_GET['source'] ?? ''));
 
-    $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
+    if ($source === 'otakudesu') {
+        $stream = Otakudesu::resolveStream($slug, $ep);
+    } else {
+        $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
+        if (!$stream && ($mode === 'indo' || $source === 'auto')) {
+            $stream = Otakudesu::resolveStream($slug, $ep);
+        }
+    }
+
     if (!$stream) {
         Response::error('Stream source not found or offline', 404);
         return;

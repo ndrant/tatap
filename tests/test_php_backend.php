@@ -221,7 +221,56 @@ assert_equals('HD-1', $parsedServers[0]['name'], 'Server name matches');
 assert_equals('https://megaplay.buzz/embed-1', $parsedServers[0]['embed'], 'Embed URL base64 decoded matches');
 
 echo "\nTask 4 Tests Passed Successfully!\n";
+
+// --- Task 5 Tests: Otakudesu Indonesian Subtitle Scraper ---
+echo "\nTesting Task 5: Otakudesu Indonesian Subtitle Scraper...\n";
+
+require_once __DIR__ . '/../php/scrapers/Otakudesu.php';
+
+use Tatap\Scrapers\Otakudesu;
+
+// 1. Test Search HTML Card Parser
+$sampleSearchHtml = <<<HTML
+<div class="channeltable">
+  <a class="ot-k" href="https://otakudesu.cloud/anime/naruto-shippuden-sub-indo/">
+    <img src="https://otakudesu.cloud/wp-content/uploads/naruto.jpg" />
+    <h2 class="ot-k-j">Naruto Shippuden Sub Indo</h2>
+  </a>
+  <a class="ot-k" href="https://otakudesu.cloud/anime/boruto-sub-indo/">
+    <img src="https://otakudesu.cloud/wp-content/uploads/boruto.jpg" />
+    <h2 class="ot-k-j">Boruto: Naruto Next Generations</h2>
+  </a>
+</div>
+HTML;
+
+$parsedSearch = Otakudesu::parseSearchHtml($sampleSearchHtml);
+assert_equals(2, count($parsedSearch), 'parseSearchHtml extracts 2 search cards');
+assert_equals('Naruto Shippuden Sub Indo', $parsedSearch[0]['title'], 'Title 1 matches');
+assert_equals('naruto-shippuden-sub-indo', $parsedSearch[0]['slug'], 'Slug 1 extracted');
+assert_equals('https://otakudesu.cloud/wp-content/uploads/naruto.jpg', $parsedSearch[0]['poster'], 'Poster 1 matches');
+
+// 2. Test Episodes HTML Parser
+$sampleEpsHtml = <<<HTML
+<div class="episodelist">
+  <ul>
+    <li><a class="ot-ep" href="https://otakudesu.cloud/episode/naruto-shippuden-episode-1-sub-indo/"><span>Naruto Shippuden Episode 1</span></a></li>
+    <li><a class="ot-ep" href="https://otakudesu.cloud/episode/naruto-shippuden-episode-2-sub-indo/"><span>Naruto Shippuden Episode 2</span></a></li>
+  </ul>
+</div>
+HTML;
+
+$parsedEps = Otakudesu::parseEpisodesHtml($sampleEpsHtml);
+assert_equals(2, count($parsedEps), 'parseEpisodesHtml extracts 2 episodes');
+assert_equals(1, $parsedEps[0]['ep'], 'Episode 1 number matches');
+assert_equals(2, $parsedEps[1]['ep'], 'Episode 2 number matches');
+
+// 3. Test Title Match Helper
+assert_equals(true, Otakudesu::isTitleMatch('Naruto Shippuden', 'Naruto Shippuden Sub Indo'), 'Title matching ignores common Indo suffixes');
+assert_equals(false, Otakudesu::isTitleMatch('Bleach', 'Naruto Shippuden'), 'Title matching correctly rejects different anime');
+
+echo "\nTask 5 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 
 
 
