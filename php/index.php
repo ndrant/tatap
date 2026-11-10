@@ -304,9 +304,45 @@ $router->add('GET', '/api/anime/{slug}/detail', function(array $params) {
 });
 
 $router->add('GET', '/api/schedule', function() {
+    $day = (string)($_GET['day'] ?? 'today');
     $safeMode = (int)($_GET['safe_mode'] ?? 1);
     $seasonal = Anilist::seasonal('airing', 1, 30, $safeMode);
-    return ['success' => true, 'data' => $seasonal['items'] ?? []];
+    $currentDay = strtolower(date('l'));
+    if ($day === 'today') {
+        $day = $currentDay;
+    }
+    return [
+        'success' => true,
+        'data' => [
+            'day' => $day,
+            'current_day' => $currentDay,
+            'items' => $seasonal['items'] ?? [],
+            'total' => count($seasonal['items'] ?? []),
+        ],
+    ];
+});
+
+$router->add('GET', '/api/upcoming-episodes', function() {
+    $day = (string)($_GET['day'] ?? 'today');
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $seasonal = Anilist::seasonal('airing', 1, 30, $safeMode);
+    $currentDay = strtolower(date('l'));
+    if ($day === 'today') {
+        $day = $currentDay;
+    }
+    return [
+        'success' => true,
+        'data' => [
+            'day' => $day,
+            'current_day' => $currentDay,
+            'items' => $seasonal['items'] ?? [],
+            'total' => count($seasonal['items'] ?? []),
+        ],
+    ];
+});
+
+$router->add('GET', '/api/translate/logs', function() {
+    return ['success' => true, 'data' => ['logs' => []]];
 });
 
 $router->add('GET', '/api/anime/{slug}/relations', function(array $params) {
@@ -317,23 +353,38 @@ $router->add('GET', '/api/anime/{slug}/relations', function(array $params) {
 // --- Stream Resolution Routes (HiAnime) ---
 $router->add('GET', '/api/anime/{slug}/episodes', function(array $params) {
     $slug = $params['slug'] ?? '';
-    $eps = Hianime::episodes($slug);
-    return ['success' => true, 'data' => $eps];
+    $title = (string)($_GET['title'] ?? '');
+    $eps = Hianime::episodes($slug, $title);
+    if (empty($eps) && (strpos($slug, 'otakudesu:') === 0 || empty($title))) {
+        $eps = Otakudesu::episodes($slug);
+    }
+    return [
+        'success' => true,
+        'data' => [
+            'slug' => $slug,
+            'episodes' => $eps,
+            'total' => count($eps),
+            'synopsis' => '',
+            'detail' => [],
+            'poster' => '',
+        ],
+    ];
 });
 
-$router->add('GET', '/api/episode', function() {
+$resolveHandler = function() {
     $slug = (string)($_GET['slug'] ?? '');
+    $title = (string)($_GET['title'] ?? '');
     $ep = max(1, (int)($_GET['ep'] ?? 1));
     $mode = (string)($_GET['mode'] ?? 'sub');
     $server = (string)($_GET['server'] ?? '');
     $source = strtolower((string)($_GET['source'] ?? ''));
 
-    if ($source === 'otakudesu') {
+    if ($source === 'otakudesu' || strpos($slug, 'otakudesu:') === 0) {
         $stream = Otakudesu::resolveStream($slug, $ep);
     } else {
-        $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
-        if (!$stream && ($mode === 'indo' || $source === 'auto')) {
-            $stream = Otakudesu::resolveStream($slug, $ep);
+        $stream = Hianime::resolveStream($slug, $ep, $mode, $server, $title);
+        if (!$stream && ($mode === 'indo' || $source === 'auto' || empty($source))) {
+            $stream = Otakudesu::resolveStream($title ?: $slug, $ep);
         }
     }
 
@@ -342,21 +393,10 @@ $router->add('GET', '/api/episode', function() {
         return;
     }
     return ['success' => true, 'data' => $stream];
-});
+};
 
-$router->add('GET', '/api/stream/resolve', function() {
-    $slug = (string)($_GET['slug'] ?? '');
-    $ep = max(1, (int)($_GET['ep'] ?? 1));
-    $mode = (string)($_GET['mode'] ?? 'sub');
-    $server = (string)($_GET['server'] ?? '');
-
-    $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
-    if (!$stream) {
-        Response::error('Stream source not found or offline', 404);
-        return;
-    }
-    return ['success' => true, 'data' => $stream];
-});
+$router->add('GET', '/api/episode', $resolveHandler);
+$router->add('GET', '/api/stream/resolve', $resolveHandler);
 
 // --- Skip Times & Subtitle Translation Routes ---
 $router->add('GET', '/api/episode/skip_times', function() {

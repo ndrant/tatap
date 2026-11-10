@@ -101,7 +101,82 @@ class Hianime
         return $servers;
     }
 
-    public static function episodes(string $slug): array
+    public static function search(string $query): array
+    {
+        $clean = trim($query);
+        if (empty($clean) || Anilist::isHentai($clean)) {
+            return [];
+        }
+        $cacheKey = 'hianime_search_' . md5($clean);
+        $cached = Cache::get($cacheKey, 86400);
+        if ($cached !== null && is_array($cached)) {
+            return $cached;
+        }
+
+        $url = self::BASE_URL . '/search?keyword=' . urlencode($clean);
+        $res = Http::get($url, [], 10, self::BASE_URL . '/');
+        if ($res['status'] !== 200 || empty($res['body'])) {
+            return [];
+        }
+
+        $results = [];
+        if (preg_match_all('/<h3 class="film-name">\s*<a\s+href="[^"]*\/([^\/"?]+)"\s+title="([^"]*)"/is', $res['body'], $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $s = $m[1];
+                $t = html_entity_decode(trim($m[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                if (!Anilist::isHentai($s) && !Anilist::isHentai($t)) {
+                    $results[] = [
+                        'id' => $s,
+                        'title' => $t,
+                    ];
+                }
+            }
+        }
+        if (!empty($results)) {
+            Cache::set($cacheKey, $results, 86400);
+        }
+        return $results;
+    }
+
+    public static function resolveSlug(string $slug, string $title = ''): ?string
+    {
+        $slug = trim($slug);
+        $parts = explode('-', $slug);
+        $last = end($parts);
+        if (is_numeric($last)) {
+            return $slug;
+        }
+
+        $cacheKey = 'hianime_slug_res_' . md5($slug . '|' . $title);
+        $cached = Cache::get($cacheKey, 86400 * 7);
+        if ($cached !== null) {
+            return $cached ?: null;
+        }
+
+        $query = !empty($title) ? $title : str_replace('-', ' ', $slug);
+        $res = self::search($query);
+        if (empty($res) && !empty($title)) {
+            $res = self::search(str_replace('-', ' ', $slug));
+        }
+
+        $picked = null;
+        if (!empty($res)) {
+            foreach ($res as $item) {
+                if (Otakudesu::isTitleMatch($query, $item['title'])) {
+                    $picked = $item['id'];
+                    break;
+                }
+            }
+            if (!$picked && !empty($res[0]['id'])) {
+                $picked = $res[0]['id'];
+            }
+        }
+
+        Cache::set($cacheKey, $picked ?? '', 86400 * 7);
+        return $picked;
+    }
+
+    public static function episodes(string $slug, string $title = ''): array
     {
         $slug = trim($slug);
         if (empty($slug) || Anilist::isHentai($slug)) {
@@ -114,12 +189,26 @@ class Hianime
             return $cached;
         }
 
-        // Numeric id is usually the last part of slug, e.g. "frieren-beyond-journeys-end-18413"
+        // Numeric id is usually the last part of slug, e.g. "frieren-beyond-journeys-end-481"
         $parts = explode('-', $slug);
         $numeric = end($parts);
+        $effSlug = $slug;
+
+        if (!is_numeric($numeric)) {
+            $resolved = self::resolveSlug($slug, $title);
+            if ($resolved) {
+                $effSlug = $resolved;
+                $p2 = explode('-', $resolved);
+                $numeric = end($p2);
+            }
+        }
+
+        if (!is_numeric($numeric)) {
+            return [];
+        }
 
         $url = self::BASE_URL . '/api/theme/episode/list/' . $numeric;
-        $res = Http::get($url, [], 10, self::BASE_URL . '/' . $slug);
+        $res = Http::get($url, [], 10, self::BASE_URL . '/' . $effSlug);
 
         $html = '';
         if ($res['status'] === 200 && !empty($res['body'])) {
@@ -233,9 +322,9 @@ class Hianime
         ];
     }
 
-    public static function resolveStream(string $slug, int $ep, string $mode = 'sub', string $server = ''): ?array
+    public static function resolveStream(string $slug, int $ep, string $mode = 'sub', string $server = '', string $title = ''): ?array
     {
-        $eps = self::episodes($slug);
+        $eps = self::episodes($slug, $title);
         if (empty($eps)) {
             return null;
         }
@@ -295,8 +384,15 @@ class Hianime
             'mode' => $mode,
             'server' => $chosenServer['name'],
             'master' => $sources['master'],
+            'variants' => [
+                ['quality' => 'auto', 'url' => $sources['master']],
+            ],
+            'picked' => ['quality' => 'auto', 'url' => $sources['master']],
             'referer' => $sources['referer'],
             'subtitles' => $sources['subtitles'],
+            'intro' => ['start' => 0, 'end' => 0],
+            'outro' => ['start' => 0, 'end' => 0],
+            'source' => 'hianime',
         ];
     }
 }

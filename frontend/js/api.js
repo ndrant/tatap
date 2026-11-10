@@ -73,6 +73,7 @@ genres:function(){var sm=this.getSafeMode();return jget("/api/genres?safe_mode="
 ping:function(){return jget("/api/ping");},
 health:function(){return jget("/api/health");},
 history:function(){return jget("/api/history");},
+clearHist:function(){return jdel("/api/history");},
 saveHist:function(b){return jpost("/api/history",b);},
 getProgress:function(slug,ep){return jget("/api/progress?slug="+encodeURIComponent(slug)+"&ep="+encodeURIComponent(ep));},
 saveProgress:function(slug,ep,progress,duration){return jpost("/api/progress",{slug:slug,episode:ep,progress:progress,duration:duration||0});},

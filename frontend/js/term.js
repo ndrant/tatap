@@ -306,7 +306,8 @@ var Tui = (function () {
             clrBtn.onclick = async function(e){
               e.stopPropagation();
               try{
-                await fetch("/api/history", {method: "DELETE"});
+                if(window.Tatap && window.Tatap.clearHist) await window.Tatap.clearHist();
+                else await fetch("/api/history", {method: "DELETE"});
                 loadView();
                 if(window.App && App.renderContinue) App.renderContinue();
                 log("riwayat menonton berhasil dihapus", "ok");
@@ -1411,7 +1412,8 @@ var Tui = (function () {
       case "riwayat":case "history":
         if(args === "hapus" || args === "clear" || args === "delete"){
           try{
-            await fetch("/api/history",{method:"DELETE"});
+            if(window.Tatap && window.Tatap.clearHist) await window.Tatap.clearHist();
+            else await fetch("/api/history",{method:"DELETE"});
             log("riwayat menonton berhasil dihapus","ok");
             if(S.view === "riwayat"){ loadView(); }
             if(window.App && App.renderContinue){ App.renderContinue(); }
@@ -2262,7 +2264,10 @@ var Tui = (function () {
       });
     }
     $("clear-hist").addEventListener("click",async function(){
-      try{await fetch("/api/history",{method:"DELETE"});}catch(e){}
+      try{
+        if(window.Tatap && window.Tatap.clearHist) await window.Tatap.clearHist();
+        else await fetch("/api/history",{method:"DELETE"});
+      }catch(e){}
       App.renderContinue();log("riwayat dihapus","ok");
     });
     document.querySelectorAll("#schedule-days-bar button").forEach(function(btn){

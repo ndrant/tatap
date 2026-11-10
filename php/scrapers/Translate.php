@@ -82,7 +82,7 @@ class Translate
         return implode("\n", $output);
     }
 
-    public static function fetchAndTranslateVtt(string $url, string $target = 'id', string $referer = ''): string
+    public static function fetchAndTranslateVtt(string $url, string $target = 'raw', string $referer = ''): string
     {
         $cacheKey = 'sub_vtt_' . md5($url . '_' . $target);
         $cached = Cache::get($cacheKey, 86400 * 7);
@@ -98,10 +98,6 @@ class Translate
         $vtt = $res['body'];
         if (strpos($vtt, 'WEBVTT') === false) {
             $vtt = "WEBVTT\n\n" . $vtt;
-        }
-
-        if ($target !== 'en' && !empty($target)) {
-            $vtt = self::translateVttString($vtt, $target);
         }
 
         Cache::set($cacheKey, $vtt, 86400 * 7);

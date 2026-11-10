@@ -8,7 +8,7 @@ use Tatap\Core\Cache;
 
 class Otakudesu
 {
-    public const BASE_URL = 'https://otakudesu.cloud';
+    public const BASE_URL = 'https://ww2.otakudesu.biz';
 
     public static function isTitleMatch(string $a, string $b): bool
     {
@@ -292,8 +292,14 @@ class Otakudesu
             'server' => 'Otakudesu (Sub Indo)',
             'source' => 'otakudesu',
             'master' => $masterUrl,
+            'variants' => [
+                ['quality' => 'auto', 'url' => $masterUrl],
+            ],
+            'picked' => ['quality' => 'auto', 'url' => $masterUrl],
             'referer' => $origin . '/',
             'subtitles' => [],
+            'intro' => ['start' => 0, 'end' => 0],
+            'outro' => ['start' => 0, 'end' => 0],
         ];
     }
 }
