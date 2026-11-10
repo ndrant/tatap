@@ -66,10 +66,14 @@ def build_php_package(output_zip: str = "dist/tatap-web-php.zip", build_dir: str
     else:
         (data_dest / ".htaccess").write_text("<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\nOrder deny,allow\nDeny from all\n")
 
-    # 4. Copy Root .htaccess
+    # 4. Copy Root .htaccess & Local Dev router.php
     htaccess_example = root / ".htaccess.example"
     if htaccess_example.is_file():
         shutil.copy2(htaccess_example, target_dir / ".htaccess")
+
+    router_src = root / "tools" / "router.php"
+    if router_src.is_file():
+        shutil.copy2(router_src, target_dir / "router.php")
 
     # 5. Build ZIP Archive
     out_zip.parent.mkdir(parents=True, exist_ok=True)
@@ -207,10 +211,38 @@ def main():
         action="store_true",
         help="Upload the ZIP file only instead of extracting files on FTP",
     )
+    parser.add_argument(
+        "--serve",
+        action="store_true",
+        help="Start local PHP development server after build",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8768,
+        help="Local development server port (default: 8768)",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Local development server host (default: 127.0.0.1)",
+    )
 
     args = parser.parse_args()
 
     zip_path = build_php_package(args.output, args.staging_dir)
+
+    if args.serve:
+        staging_dir = Path(args.staging_dir).resolve()
+        router_file = staging_dir / "router.php"
+        print(f"\n🚀 Running local PHP server at http://{args.host}:{args.port}")
+        print("Press Ctrl+C to stop.\n")
+        try:
+            import subprocess
+            subprocess.run(["php", "-S", f"{args.host}:{args.port}", "-t", str(staging_dir), str(router_file)])
+        except KeyboardInterrupt:
+            print("\n[✓] Local PHP server stopped.")
+        return
 
     if args.deploy_ftp:
         if not args.ftp_host or not args.ftp_user or not args.ftp_pass:
