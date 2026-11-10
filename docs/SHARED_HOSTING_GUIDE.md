@@ -18,7 +18,29 @@ Sebagian besar layanan shared hosting modern sudah memenuhi seluruh kebutuhan in
 
 ---
 
-## 2. Cara 1: Otomatis Menggunakan Tool CLI (`build_php_web.py`)
+## 2. Pengujian Lokal Terlebih Dahulu (Run in Local First)
+
+Sebelum mengunggah ke hosting, Anda dapat menguji langsung versi PHP ini di komputer lokal Anda:
+
+### Cara Praktis (Satu Perintah Otomatis):
+```bash
+python3 tools/build_php_web.py --serve
+```
+*Perintah ini otomatis membangun paket dan langsung menjalankan server PHP lokal di `http://127.0.0.1:8768`.*
+
+### Cara Manual via Built-in PHP Server:
+```bash
+# 1. Bangun paket staging
+python3 tools/build_php_web.py
+
+# 2. Jalankan server lokal dengan router pengarah
+php -S 127.0.0.1:8768 -t dist/tatap-web-php dist/tatap-web-php/router.php
+```
+Buka browser dan akses **`http://127.0.0.1:8768`**. Anda dapat langsung mencoba pencarian anime, membuka detail AniList, memutar episode HiAnime/Otakudesu, dan menguji subtitle terjemahan.
+
+---
+
+## 3. Cara 1: Otomatis Mengunggah via Tool CLI (`build_php_web.py`)
 
 Jika Anda memiliki akses FTP/FTPS ke akun shared hosting Anda:
 
