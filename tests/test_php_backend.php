@@ -192,6 +192,36 @@ assert_true(count($searchRes['results']) > 0, 'AniList search returns Frieren re
 assert_true(isset($searchRes['results'][0]['title']), 'Search result item has title');
 
 echo "\nTask 3 Tests Passed Successfully!\n";
+
+// --- Task 4 Tests: HiAnime Scraper & MegaCloud AES Decryptor ---
+echo "\nTesting Task 4: HiAnime Scraper & MegaCloud AES Decryptor...\n";
+
+require_once __DIR__ . '/../php/scrapers/Hianime.php';
+
+use Tatap\Scrapers\Hianime;
+
+// 1. Test AES Decryption with Test Vector
+$cipherText = 'dOak2W2AVosthmhMqWoTI0Wxk-_Ql0H4ss5Dalq3L5PNMQVCxhOfPf6YSHwxmNQhnpfp2BTEBRGLWeboMHY-lA';
+$decrypted = Hianime::decryptMegaCloud($cipherText);
+assert_true(strpos($decrypted, 'https://example.com/master.m3u8') !== false, 'MegaCloud AES decryptor recovers valid JSON master URL');
+
+// 2. Test Episodes Scraper Parser
+$sampleEpisodeHtml = '<div class="ssl-item ep-item" data-number="1" data-id="12345" title="Episode 1"><div class="ssli-order">1</div></div><div class="ssl-item ep-item" data-number="2" data-id="12346" title="Episode 2"><div class="ssli-order">2</div></div>';
+$parsedEps = Hianime::parseEpisodesHtml($sampleEpisodeHtml);
+assert_equals(2, count($parsedEps), 'parseEpisodesHtml extracts 2 episodes');
+assert_equals(1, $parsedEps[0]['ep'], 'Episode 1 number matches');
+assert_equals('12345', $parsedEps[0]['ep_id'], 'Episode 1 ep_id matches');
+assert_equals(2, $parsedEps[1]['ep'], 'Episode 2 number matches');
+
+// 3. Test Servers HTML Parser
+$sampleServersHtml = '<div class="server-item" data-type="sub" data-hash="aHR0cHM6Ly9tZWdhcGxheS5idXp6L2VtYmVkLTE=" data-server-name="HD-1">HD-1</div>';
+$parsedServers = Hianime::parseServersHtml($sampleServersHtml, 'sub');
+assert_equals(1, count($parsedServers), 'parseServersHtml extracts sub server');
+assert_equals('HD-1', $parsedServers[0]['name'], 'Server name matches');
+assert_equals('https://megaplay.buzz/embed-1', $parsedServers[0]['embed'], 'Embed URL base64 decoded matches');
+
+echo "\nTask 4 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 
 

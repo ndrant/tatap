@@ -14,6 +14,7 @@ require_once __DIR__ . '/user/History.php';
 require_once __DIR__ . '/user/Bookmarks.php';
 require_once __DIR__ . '/user/Settings.php';
 require_once __DIR__ . '/scrapers/Anilist.php';
+require_once __DIR__ . '/scrapers/Hianime.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
@@ -23,6 +24,7 @@ use Tatap\User\History;
 use Tatap\User\Bookmarks;
 use Tatap\User\Settings;
 use Tatap\Scrapers\Anilist;
+use Tatap\Scrapers\Hianime;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -247,6 +249,41 @@ $router->add('GET', '/api/anime/{slug}/detail', function(array $params) {
         return;
     }
     return ['success' => true, 'data' => $detail];
+});
+
+// --- Stream Resolution Routes (HiAnime) ---
+$router->add('GET', '/api/anime/{slug}/episodes', function(array $params) {
+    $slug = $params['slug'] ?? '';
+    $eps = Hianime::episodes($slug);
+    return ['success' => true, 'data' => $eps];
+});
+
+$router->add('GET', '/api/episode', function() {
+    $slug = (string)($_GET['slug'] ?? '');
+    $ep = max(1, (int)($_GET['ep'] ?? 1));
+    $mode = (string)($_GET['mode'] ?? 'sub');
+    $server = (string)($_GET['server'] ?? '');
+
+    $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
+    if (!$stream) {
+        Response::error('Stream source not found or offline', 404);
+        return;
+    }
+    return ['success' => true, 'data' => $stream];
+});
+
+$router->add('GET', '/api/stream/resolve', function() {
+    $slug = (string)($_GET['slug'] ?? '');
+    $ep = max(1, (int)($_GET['ep'] ?? 1));
+    $mode = (string)($_GET['mode'] ?? 'sub');
+    $server = (string)($_GET['server'] ?? '');
+
+    $stream = Hianime::resolveStream($slug, $ep, $mode, $server);
+    if (!$stream) {
+        Response::error('Stream source not found or offline', 404);
+        return;
+    }
+    return ['success' => true, 'data' => $stream];
 });
 
 // If run from web request, dispatch
