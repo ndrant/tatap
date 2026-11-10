@@ -1,0 +1,30 @@
+# Tatap Web PHP - Apache / LiteSpeed Configuration
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct access to sensitive data files
+    RewriteRule ^data/ - [F,L]
+    RewriteRule \.(sqlite|db|log|lock|ini|cache)$ - [F,L]
+
+    # Route all /api/* requests to api/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^api/(.*)$ api/index.php?endpoint=$1 [QSA,L]
+
+    # Route root requests to index.html if not a static file
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+# Enable Gzip / Deflate compression for text, json, and JS
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "no-referrer-when-downgrade"
+</IfModule>
