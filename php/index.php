@@ -8,10 +8,19 @@ require_once __DIR__ . '/core/Response.php';
 require_once __DIR__ . '/core/Router.php';
 require_once __DIR__ . '/core/Http.php';
 require_once __DIR__ . '/core/Cache.php';
+require_once __DIR__ . '/core/Database.php';
+require_once __DIR__ . '/core/Session.php';
+require_once __DIR__ . '/user/History.php';
+require_once __DIR__ . '/user/Bookmarks.php';
+require_once __DIR__ . '/user/Settings.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
 use Tatap\Core\Cache;
+use Tatap\Core\Session;
+use Tatap\User\History;
+use Tatap\User\Bookmarks;
+use Tatap\User\Settings;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -68,6 +77,112 @@ $router->add('GET', '/api/update/check', function() {
         'current_version' => Config::VERSION,
         'latest_version' => Config::VERSION,
     ];
+});
+
+// Helper to parse JSON request body
+$getJsonBody = function(): array {
+    $raw = file_get_contents('php://input');
+    if (empty($raw)) {
+        return $_POST;
+    }
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+};
+
+// --- User Data Routes (Visitor Isolated) ---
+$router->add('GET', '/api/history', function() {
+    $token = Session::getVisitorToken();
+    return ['success' => true, 'data' => History::list($token)];
+});
+
+$router->add('POST', '/api/history', function() use ($getJsonBody) {
+    $token = Session::getVisitorToken();
+    $body = $getJsonBody();
+    $res = History::add($token, $body);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('DELETE', '/api/history', function() {
+    $token = Session::getVisitorToken();
+    $res = History::clear($token);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('GET', '/api/progress', function() {
+    $token = Session::getVisitorToken();
+    $slug = (string)($_GET['slug'] ?? '');
+    $ep = (int)($_GET['ep'] ?? 1);
+    $data = History::getProgress($token, $slug, $ep);
+    return ['success' => true, 'data' => $data ?: ['progress' => 0, 'duration' => 0]];
+});
+
+$router->add('POST', '/api/progress', function() use ($getJsonBody) {
+    $token = Session::getVisitorToken();
+    $body = $getJsonBody();
+    $slug = (string)($body['slug'] ?? '');
+    $ep = (int)($body['episode'] ?? 1);
+    $progress = (int)($body['progress'] ?? 0);
+    $duration = (int)($body['duration'] ?? 0);
+    $res = History::saveProgress($token, $slug, $ep, $progress, $duration);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('DELETE', '/api/progress', function() {
+    $token = Session::getVisitorToken();
+    $slug = (string)($_GET['slug'] ?? '');
+    $ep = (int)($_GET['ep'] ?? 1);
+    $res = History::deleteProgress($token, $slug, $ep);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('GET', '/api/bookmarks', function() {
+    $token = Session::getVisitorToken();
+    return ['success' => true, 'data' => Bookmarks::list($token)];
+});
+
+$router->add('POST', '/api/bookmarks', function() use ($getJsonBody) {
+    $token = Session::getVisitorToken();
+    $body = $getJsonBody();
+    $res = Bookmarks::add($token, $body);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('DELETE', '/api/bookmarks/{slug}', function(array $params) {
+    $token = Session::getVisitorToken();
+    $slug = $params['slug'] ?? '';
+    $res = Bookmarks::remove($token, $slug);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('DELETE', '/api/bookmarks', function() {
+    $token = Session::getVisitorToken();
+    $res = Bookmarks::clear($token);
+    return ['success' => $res, 'data' => $res];
+});
+
+$router->add('GET', '/api/bookmarks/check', function() {
+    $token = Session::getVisitorToken();
+    $slug = (string)($_GET['slug'] ?? '');
+    $isBookmarked = Bookmarks::check($token, $slug);
+    return [
+        'success' => true,
+        'bookmarked' => $isBookmarked,
+        'data' => $isBookmarked,
+    ];
+});
+
+$router->add('GET', '/api/settings', function() {
+    $token = Session::getVisitorToken();
+    return ['success' => true, 'data' => Settings::all($token)];
+});
+
+$router->add('POST', '/api/settings', function() use ($getJsonBody) {
+    $token = Session::getVisitorToken();
+    $body = $getJsonBody();
+    foreach ($body as $k => $v) {
+        Settings::set($token, (string)$k, (string)$v);
+    }
+    return ['success' => true, 'data' => true];
 });
 
 // If run from web request, dispatch

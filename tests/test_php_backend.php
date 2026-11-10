@@ -93,4 +93,69 @@ $jsonOutput = Response::formatJson(['version' => '2.3.0', 'active' => true]);
 assert_true(strpos($jsonOutput, '"version":"2.3.0"') !== false, 'Response formats clean JSON payload');
 
 echo "\nTask 1 Tests Passed Successfully!\n";
+
+// --- Task 2 Tests: Database & Visitor Isolation ---
+echo "\nTesting Task 2: Database & Multi-Visitor Isolation (History & Bookmarks)...\n";
+
+require_once __DIR__ . '/../php/core/Database.php';
+require_once __DIR__ . '/../php/core/Session.php';
+require_once __DIR__ . '/../php/user/History.php';
+require_once __DIR__ . '/../php/user/Bookmarks.php';
+require_once __DIR__ . '/../php/user/Settings.php';
+
+use Tatap\Core\Database;
+use Tatap\Core\Session;
+use Tatap\User\History;
+use Tatap\User\Bookmarks;
+use Tatap\User\Settings;
+
+$pdo = Database::pdo();
+assert_true($pdo instanceof PDO, 'Database initializes PDO SQLite connection');
+
+// Test visitor isolation
+$tokenA = 'visitor_token_aaa_111';
+$tokenB = 'visitor_token_bbb_222';
+
+// 1. Bookmarks isolation
+Bookmarks::add($tokenA, [
+    'slug' => 'one-piece',
+    'title' => 'One Piece',
+    'poster' => 'https://img.example/op.jpg',
+    'type' => 'TV',
+]);
+
+$bA = Bookmarks::list($tokenA);
+$bB = Bookmarks::list($tokenB);
+assert_equals(1, count($bA), 'Visitor A has 1 bookmark');
+assert_equals('one-piece', $bA[0]['slug'], 'Visitor A has one-piece bookmark');
+assert_equals(0, count($bB), 'Visitor B sees 0 bookmarks (isolation verified)');
+
+// Check checkBookmark
+assert_equals(true, Bookmarks::check($tokenA, 'one-piece'), 'Bookmark check true for Visitor A');
+assert_equals(false, Bookmarks::check($tokenB, 'one-piece'), 'Bookmark check false for Visitor B');
+
+// 2. Watch History isolation
+History::add($tokenA, [
+    'slug' => 'one-piece',
+    'title' => 'One Piece',
+    'episode' => 1080,
+    'progress' => 120,
+    'poster' => 'https://img.example/op.jpg',
+]);
+
+$hA = History::list($tokenA);
+$hB = History::list($tokenB);
+assert_equals(1, count($hA), 'Visitor A has 1 history record');
+assert_equals(0, count($hB), 'Visitor B sees 0 history records (isolation verified)');
+
+// 3. Clear History isolation
+History::clear($tokenA);
+assert_equals(0, count(History::list($tokenA)), 'Visitor A history cleared successfully');
+
+// 4. Remove Bookmark
+Bookmarks::remove($tokenA, 'one-piece');
+assert_equals(false, Bookmarks::check($tokenA, 'one-piece'), 'Visitor A bookmark removed');
+
+echo "\nTask 2 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
