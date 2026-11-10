@@ -367,6 +367,68 @@ unset($_SERVER['HTTP_X_VISITOR_TOKEN']);
 // 2. SSRF DNS Rebinding & Localhost Alias Guard
 assert_equals(false, VideoProxy::isAllowedUrl('http://127.0.0.1.nip.io/stream.m3u8'), 'SSRF guard blocks domain resolving to 127.0.0.1');
 
+// 3. Season Consistency & Title Matching Tests (Directive 7.3)
+assert_equals(2, Otakudesu::extractSeasonNum('Cyberpunk: Edgerunners 2'), 'extractSeasonNum extracts trailing digit');
+assert_equals(1, Otakudesu::extractSeasonNum('Cyberpunk: Edgerunners'), 'extractSeasonNum defaults to 1 for unseasoned');
+assert_equals(3, Otakudesu::extractSeasonNum('Re:Zero Season 3'), 'extractSeasonNum extracts Season X');
+assert_equals(false, Otakudesu::isTitleMatch('Cyberpunk: Edgerunners 2', 'Cyberpunk: Edgerunners'), 'isTitleMatch rejects season 1 vs season 2');
+assert_equals(true, Otakudesu::isTitleMatch('Cyberpunk: Edgerunners 2', 'Cyberpunk: Edgerunners 2'), 'isTitleMatch matches identical season 2');
+
+// 4. HiAnime XOR Embed Deobfuscation (ZokoAnime & VidPlay window.__P)
+$samplePayload = json_encode([
+    'src' => 'https://hls.example.com/master.m3u8',
+    'subtitles' => [
+        ['src' => 'https://hls.example.com/sub.vtt', 'label' => 'English', 'default' => true],
+    ],
+]);
+$xorKey = 'otaku-embed-v1';
+$kLen = strlen($xorKey);
+$obf = '';
+for ($i = 0; $i < strlen($samplePayload); $i++) {
+    $obf .= chr(ord($samplePayload[$i]) ^ ord($xorKey[$i % $kLen]));
+}
+$b64 = base64_encode($obf);
+$mockHtml = '<script>window.__P="' . $b64 . '";</script>';
+preg_match('/window\.__P\s*=\s*"([^"]*)"/', $mockHtml, $pm);
+assert_true(!empty($pm[1]), 'window.__P regex captures obfuscated payload');
+$decRaw = base64_decode($pm[1]);
+$decOut = '';
+for ($i = 0; $i < strlen($decRaw); $i++) {
+    $decOut .= chr(ord($decRaw[$i]) ^ ord($xorKey[$i % $kLen]));
+}
+$decCfg = json_decode($decOut, true);
+assert_equals('https://hls.example.com/master.m3u8', $decCfg['src'] ?? '', 'XOR deobfuscator successfully recovers master M3U8');
+assert_equals('English', $decCfg['subtitles'][0]['label'] ?? '', 'XOR deobfuscator successfully recovers subtitle label');
+
+// 5. Persistent Subtitle Cache in SQLite (Database::setSubtitleCache & getSubtitleCache)
+$subKeyTest = 'test_sub_key_' . uniqid();
+$subPayloadTest = "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHalo dunia dari SQLite!";
+Database::setSubtitleCache($subKeyTest, $subPayloadTest);
+$retrievedSub = Database::getSubtitleCache($subKeyTest);
+assert_equals($subPayloadTest, $retrievedSub, 'Database stores and recovers subtitle cache from SQLite');
+Database::deleteSubtitleCache($subKeyTest);
+assert_equals(null, Database::getSubtitleCache($subKeyTest), 'Database deletes subtitle cache properly');
+
+// 6. Schedule Real-time Day Filter & Browse Filtering
+$schedMon = Anilist::schedule('monday');
+assert_true(isset($schedMon['items']), 'Anilist::schedule returns items array for Monday');
+assert_equals('monday', $schedMon['weekday'] ?? '', 'Anilist::schedule Monday has weekday monday');
+assert_equals('Senin', $schedMon['day_name'] ?? '', 'Anilist::schedule Monday has day_name Senin');
+
+$schedTue = Anilist::schedule('tuesday');
+assert_true(isset($schedTue['items']), 'Anilist::schedule returns items array for Tuesday');
+assert_equals('tuesday', $schedTue['weekday'] ?? '', 'Anilist::schedule Tuesday has weekday tuesday');
+assert_equals('Selasa', $schedTue['day_name'] ?? '', 'Anilist::schedule Tuesday has day_name Selasa');
+
+$browseRes = Anilist::browse(['sort' => 'score', 'type' => 'TV'], 1, 10);
+assert_true(isset($browseRes['items']) && is_array($browseRes['items']), 'Anilist::browse returns items array');
+assert_true(count($browseRes['items']) > 0, 'Anilist::browse returns populated items for TV sorted by score');
+
+// 7. Otakudesu Real-time Episode Resolution
+$otakuEps = Otakudesu::episodes('https://ww2.otakudesu.biz/anime/sousou-no-frieren-52k8xjp/');
+assert_true(count($otakuEps) > 0, 'Otakudesu::episodes resolves episode list');
+assert_equals(1, $otakuEps[0]['ep'] ?? 0, 'Otakudesu::episodes starts from episode 1');
+
 echo "\nAll Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
 

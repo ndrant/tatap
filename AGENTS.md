@@ -265,3 +265,219 @@ Saat menangani issue dari pengguna/komunitas di GitHub:
 - **Verifikasi Sebelum Klaim Sukses:** Selalu jalankan uji sintaksis (`node --check`, linting, build test) dan verifikasi release (`gh release view`) sebelum mendeklarasikan tugas selesai.
 - **Transparansi Kerja:** Laporkan langkah kerja secara ringkas, jelas, dan sertakan tautan ke file atau artefak terkait.
 
+
+<!-- context7 -->
+Use Context7 MCP to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service — even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, porting code between libraries, platforms, or SQL dialects, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer — your training data may not reflect recent changes. Prefer this over web search for library docs.
+
+Do not use for: refactoring, debugging, or reviewing code that does not depend on a library or platform API, or general programming concepts.
+
+## Steps
+
+1. Always start with `resolve-library-id` using the library name and what to look up in the library's documentation, unless the user provides an exact library ID in `/org/project` format
+2. Pick the best match (ID format: `/org/project`) by: exact name match, description relevance, code snippet count, source reputation (High/Medium preferred), and benchmark score (higher is better). If results don't look right, try alternate names or queries (e.g., "next.js" not "nextjs", or rephrase the question). Use version-specific IDs when the user mentions a version
+3. `query-docs` with the selected library ID and what to look up in the library's documentation (not single words), scoped to a single concept. If the question spans multiple distinct concepts (e.g. routing and auth and caching), make a separate `query-docs` call per concept with the same library ID, unless the question is about how the concepts interact — combined queries dilute ranking and return shallow results for each topic
+4. Answer using the fetched docs
+
+## Library source code
+
+If the `query-code` tool is available, use it when the docs do not answer an exact question: a signature or type, a default value, an option name, where an error message comes from, or how something works inside.
+
+- Use a library ID that `resolve-library-id` marks with "Source code", usually the GitHub repository (e.g. `/colinhacks/zod`). `/websites/...` and `/llmstxt/...` IDs have no source
+- Start with `grep` (set `fixed_strings` for error messages) or `definition` for a symbol, then `read` the file range in the result's "Next:" line
+- For a version, pass its git tag in `version` (e.g. `v3.24.2`)
+- Most questions need 1 to 4 `query-code` calls; stop at 6
+- If it answers "being indexed", retry at most twice, then answer from `query-docs`
+- Cite the file and line of the source you used
+<!-- context7 -->
+
+
+# AUTONOMOUS ENGINEERING RULES
+
+## 1. Core Responsibility
+
+Act as the autonomous senior software engineer responsible for the entire project lifecycle.
+
+Your responsibility includes:
+- Project analysis.
+- Architecture evaluation.
+- Feature implementation.
+- Code quality.
+- Application execution.
+- Browser-based testing.
+- Error detection.
+- Root cause analysis.
+- Automatic bug fixing.
+- Regression testing.
+- Persistent progress management.
+
+Your work is NOT complete when code implementation finishes.
+
+Your work is complete only when implementation and relevant application behavior have been verified.
+
+## 2. Mandatory Skills
+
+For every relevant development task:
+
+1. Inspect available project and global skills.
+2. Read the complete Lightpanda skill instructions before browser testing.
+3. Use Lightpanda browser tools directly for application testing.
+4. Use Context7 for current framework, library, API, and dependency documentation.
+5. Follow the autonomous-development skill.
+6. Never claim that a skill or tool was used without actually invoking it.
+
+Always include `use context7` when researching or implementing programming solutions.
+
+## 3. Mandatory Persistent State
+
+Before starting work, read:
+
+- `.agents/state/PROJECT_STATUS.md`
+- `.agents/state/TASK_BACKLOG.md`
+- `.agents/state/TESTING_CHECKLIST.md`
+- `.agents/state/ERROR_LOG.md`
+- `.agents/state/SESSION_HANDOFF.md`
+
+If any file is missing, create it.
+
+These files are the persistent source of truth across agent conversations and context resets.
+
+Never assume that previous conversation history is available.
+
+Never overwrite unfinished progress with a new empty plan.
+
+## 4. Execution Protocol
+
+Always follow:
+
+ANALYZE
+→ PLAN
+→ IMPLEMENT
+→ RUN
+→ BROWSER TEST
+→ AUDIT
+→ FIX
+→ REGRESSION TEST
+→ UPDATE STATE
+→ REPEAT
+
+After each meaningful task:
+
+- Update the task backlog.
+- Update project status.
+- Update testing results.
+- Record discovered errors.
+- Record verified fixes.
+- Update the session handoff.
+
+## 5. Mandatory Browser Testing
+
+Lightpanda is the primary headless browser testing tool.
+
+Do not rely exclusively on static code inspection, compilation, or unit tests.
+
+For each accessible feature:
+
+1. Open the actual running application.
+2. Inspect its rendered content and interactive elements.
+3. Test navigation and user interactions.
+4. Test forms and validation.
+5. Test relevant CRUD operations.
+6. Test filters, sorting, and pagination.
+7. Verify API responses.
+8. Verify expected application behavior.
+9. Inspect browser console errors.
+10. Inspect failed network requests.
+11. Record the results.
+
+Use test accounts and isolated test data.
+
+Never perform destructive testing against production data.
+
+## 6. Autonomous Error Resolution
+
+When an error is discovered:
+
+1. Record the error.
+2. Reproduce it.
+3. Determine the root cause.
+4. Inspect relevant code and dependencies.
+5. Consult Context7 when documentation is relevant.
+6. Implement the correct fix.
+7. Execute relevant automated tests.
+8. Reload the application.
+9. Repeat the original browser interaction.
+10. Verify the fix.
+11. Run regression tests.
+
+Do not stop after reporting an error that can be resolved within the authorized scope.
+
+Do not mark an error as fixed without verification.
+
+## 7. Continuous Work
+
+After completing a task, automatically select the next highest-priority pending task.
+
+Do not wait for another user instruction when the next action is already within the approved project scope.
+
+Do not stop after one successful browser test.
+
+Continue until all applicable completion criteria are satisfied or a genuine blocker requires human intervention.
+
+Never create artificial tasks just to keep working. Prioritize actual requirements, bugs, security, reliability, and incomplete functionality.
+
+## 8. Context Reset Recovery
+
+At the beginning of every new conversation:
+
+1. Read all persistent state files.
+2. Read the latest session handoff.
+3. Inspect the actual Git working tree.
+4. Compare repository changes with the recorded progress.
+5. Verify the current application and test environment.
+6. Identify the last incomplete task.
+7. Resume from the first unfinished task.
+8. Do not restart completed work unless regression or changed requirements justify it.
+
+Before context becomes limited or a task is interrupted:
+
+- Save current progress.
+- Record files changed.
+- Record commands executed.
+- Record test results.
+- Record remaining work.
+- Write explicit next actions to SESSION_HANDOFF.md.
+
+## 9. Safety and Quality
+
+Never:
+- Delete user data without authorization.
+- Run destructive database operations against production.
+- Expose secrets or credentials.
+- Disable security checks to make tests pass.
+- Hide or suppress errors without understanding them.
+- Claim tests passed without running them.
+- Replace established architecture unnecessarily.
+- Commit unrelated user changes.
+
+Ask for approval when a genuinely sensitive or irreversible action requires it.
+
+## 10. Completion Criteria
+
+A task can only be marked complete when:
+
+- Requirements are implemented.
+- Relevant automated tests pass.
+- Relevant browser tests pass.
+- Discovered functional errors are resolved.
+- Regression tests pass.
+- Remaining blockers are documented.
+
+The overall project must not be declared complete while requested functionality remains unfinished.
+
+## 11. Final Directive
+
+Always prioritize a working, reliable, tested application over merely producing source code.
+
+Never stop at implementation.
+
+Always test, audit, fix, verify, persist progress, and continue.

@@ -78,7 +78,54 @@ class Database
             value TEXT NOT NULL,
             PRIMARY KEY (visitor_token, key)
         );
+
+        CREATE TABLE IF NOT EXISTS subtitle_cache (
+            key TEXT PRIMARY KEY,
+            payload TEXT,
+            fetched_at INTEGER
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_sbc_fetched_at ON subtitle_cache(fetched_at);
 SQL;
         self::$pdo->exec($sql);
+    }
+
+    public static function getSubtitleCache(string $key, int $ttl = 30 * 86400): ?string
+    {
+        try {
+            $stmt = self::pdo()->prepare('SELECT payload, fetched_at FROM subtitle_cache WHERE key = :key');
+            $stmt->execute([':key' => $key]);
+            $row = $stmt->fetch();
+            if (!$row) {
+                return null;
+            }
+            if ((time() - (int)$row['fetched_at']) > $ttl) {
+                self::deleteSubtitleCache($key);
+                return null;
+            }
+            return (string)$row['payload'];
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public static function setSubtitleCache(string $key, string $payload): void
+    {
+        try {
+            $stmt = self::pdo()->prepare('INSERT OR REPLACE INTO subtitle_cache (key, payload, fetched_at) VALUES (:key, :payload, :fetched_at)');
+            $stmt->execute([
+                ':key' => $key,
+                ':payload' => $payload,
+                ':fetched_at' => time(),
+            ]);
+        } catch (\Throwable $e) {}
+    }
+
+    public static function deleteSubtitleCache(string $key): void
+    {
+        try {
+            $stmt = self::pdo()->prepare('DELETE FROM subtitle_cache WHERE key = :key');
+            $stmt->execute([':key' => $key]);
+        } catch (\Throwable $e) {}
     }
 }

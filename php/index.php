@@ -28,6 +28,7 @@ use Tatap\Core\Router;
 use Tatap\Core\Response;
 use Tatap\Core\Cache;
 use Tatap\Core\Session;
+use Tatap\Core\Database;
 use Tatap\User\History;
 use Tatap\User\Bookmarks;
 use Tatap\User\Settings;
@@ -223,7 +224,9 @@ $router->add('GET', '/api/bookmarks/check', function() {
     return [
         'success' => true,
         'bookmarked' => $isBookmarked,
-        'data' => $isBookmarked,
+        'data' => [
+            'bookmarked' => $isBookmarked,
+        ],
     ];
 });
 
@@ -289,7 +292,17 @@ $router->add('GET', '/api/catalog', function() {
 $router->add('GET', '/api/browse', function() {
     $page = max(1, (int)($_GET['page'] ?? 1));
     $safeMode = (int)($_GET['safe_mode'] ?? 1);
-    $res = Anilist::seasonal('popular', $page, 24, $safeMode);
+    $params = [
+        'sort' => (string)($_GET['sort'] ?? ''),
+        'year' => (string)($_GET['year'] ?? $_GET['sy'] ?? ''),
+        'season' => (string)($_GET['season'] ?? ''),
+        'month' => (string)($_GET['month'] ?? $_GET['sm'] ?? ''),
+        'type' => (string)($_GET['type'] ?? $_GET['format'] ?? ''),
+        'status' => (string)($_GET['status'] ?? ''),
+        'genre' => (string)($_GET['genre'] ?? ''),
+        'keyword' => (string)($_GET['keyword'] ?? ''),
+    ];
+    $res = Anilist::browse($params, $page, 24, $safeMode);
     return ['success' => true, 'data' => $res];
 });
 
@@ -306,38 +319,20 @@ $router->add('GET', '/api/anime/{slug}/detail', function(array $params) {
 $router->add('GET', '/api/schedule', function() {
     $day = (string)($_GET['day'] ?? 'today');
     $safeMode = (int)($_GET['safe_mode'] ?? 1);
-    $seasonal = Anilist::seasonal('airing', 1, 30, $safeMode);
-    $currentDay = strtolower(date('l'));
-    if ($day === 'today') {
-        $day = $currentDay;
-    }
+    $data = Anilist::schedule($day, $safeMode);
     return [
         'success' => true,
-        'data' => [
-            'day' => $day,
-            'current_day' => $currentDay,
-            'items' => $seasonal['items'] ?? [],
-            'total' => count($seasonal['items'] ?? []),
-        ],
+        'data' => $data,
     ];
 });
 
 $router->add('GET', '/api/upcoming-episodes', function() {
     $day = (string)($_GET['day'] ?? 'today');
     $safeMode = (int)($_GET['safe_mode'] ?? 1);
-    $seasonal = Anilist::seasonal('airing', 1, 30, $safeMode);
-    $currentDay = strtolower(date('l'));
-    if ($day === 'today') {
-        $day = $currentDay;
-    }
+    $data = Anilist::schedule($day, $safeMode);
     return [
         'success' => true,
-        'data' => [
-            'day' => $day,
-            'current_day' => $currentDay,
-            'items' => $seasonal['items'] ?? [],
-            'total' => count($seasonal['items'] ?? []),
-        ],
+        'data' => $data,
     ];
 });
 
@@ -350,18 +345,43 @@ $router->add('GET', '/api/anime/{slug}/relations', function(array $params) {
     return ['success' => true, 'data' => []];
 });
 
-// --- Stream Resolution Routes (HiAnime) ---
+// --- Stream Resolution Routes (HiAnime / Otakudesu) ---
 $router->add('GET', '/api/anime/{slug}/episodes', function(array $params) {
     $slug = $params['slug'] ?? '';
     $title = (string)($_GET['title'] ?? '');
-    $eps = Hianime::episodes($slug, $title);
-    if (empty($eps) && (strpos($slug, 'otakudesu:') === 0 || empty($title))) {
-        $eps = Otakudesu::episodes($slug);
+    $source = strtolower(trim((string)($_GET['source'] ?? '')));
+
+    $cleanSlug = strpos($slug, 'otakudesu:') === 0 ? substr($slug, 10) : $slug;
+    $cleanSlug = strpos($cleanSlug, 'anichan:') === 0 ? substr($cleanSlug, 8) : $cleanSlug;
+
+    $eps = [];
+    $effectiveSource = $source;
+
+    if ($source === 'otakudesu' || strpos($slug, 'otakudesu:') === 0) {
+        $eps = Otakudesu::episodes($cleanSlug, $title);
+        $effectiveSource = 'otakudesu';
+        if (empty($eps)) {
+            $eps = Hianime::episodes($cleanSlug, $title);
+            if (!empty($eps)) {
+                $effectiveSource = 'hianime';
+            }
+        }
+    } else {
+        $eps = Hianime::episodes($cleanSlug, $title);
+        $effectiveSource = 'hianime';
+        if (empty($eps)) {
+            $eps = Otakudesu::episodes($cleanSlug, $title);
+            if (!empty($eps)) {
+                $effectiveSource = 'otakudesu';
+            }
+        }
     }
+
     return [
         'success' => true,
         'data' => [
             'slug' => $slug,
+            'source' => $effectiveSource ?: 'hianime',
             'episodes' => $eps,
             'total' => count($eps),
             'synopsis' => '',
@@ -379,12 +399,45 @@ $resolveHandler = function() {
     $server = (string)($_GET['server'] ?? '');
     $source = strtolower((string)($_GET['source'] ?? ''));
 
+    $cleanSlug = strpos($slug, 'otakudesu:') === 0 ? substr($slug, 10) : $slug;
+    $cleanSlug = strpos($cleanSlug, 'anichan:') === 0 ? substr($cleanSlug, 8) : $cleanSlug;
+
+    $effectiveTitle = $title;
+    if (empty($effectiveTitle) && !is_numeric($cleanSlug)) {
+        $raw = str_replace('-', ' ', $cleanSlug);
+        if (preg_match('/^(.+?)-(\d{3,})$/', $cleanSlug, $pm)) {
+            $raw = str_replace('-', ' ', $pm[1]);
+        }
+        $effectiveTitle = trim($raw);
+    }
+    if (empty($effectiveTitle) && is_numeric($cleanSlug)) {
+        $detail = Anilist::detail($cleanSlug);
+        if ($detail && !empty($detail['title'])) {
+            $effectiveTitle = $detail['title'];
+            $title = $detail['title'];
+        }
+    }
+
+    $stream = null;
+    $otakuQuery = !empty($effectiveTitle) ? $effectiveTitle : $cleanSlug;
+
     if ($source === 'otakudesu' || strpos($slug, 'otakudesu:') === 0) {
-        $stream = Otakudesu::resolveStream($slug, $ep);
+        $stream = Otakudesu::resolveStream($otakuQuery, $ep);
+        if (!$stream) {
+            $stream = Hianime::resolveStream($cleanSlug, $ep, $mode, $server, $title);
+            if ($stream) {
+                $stream['is_failover'] = true;
+                $stream['failover_from'] = 'otakudesu';
+            }
+        }
     } else {
-        $stream = Hianime::resolveStream($slug, $ep, $mode, $server, $title);
-        if (!$stream && ($mode === 'indo' || $source === 'auto' || empty($source))) {
-            $stream = Otakudesu::resolveStream($title ?: $slug, $ep);
+        $stream = Hianime::resolveStream($cleanSlug, $ep, $mode, $server, $title);
+        if (!$stream && ($mode === 'indo' || $source === 'auto' || empty($source) || $source === 'otakudesu')) {
+            $stream = Otakudesu::resolveStream($otakuQuery, $ep);
+            if ($stream) {
+                $stream['is_failover'] = true;
+                $stream['failover_from'] = 'hianime';
+            }
         }
     }
 
@@ -451,7 +504,28 @@ $router->add('POST', '/api/player/sub_chunk', function() use ($getJsonBody) {
     return ['success' => true, 'data' => $translated, 'cues' => $translated];
 });
 
-$router->add('POST', '/api/player/sub_cache_save', function() {
+$router->add('POST', '/api/player/sub_cache_save', function() use ($getJsonBody) {
+    $body = $getJsonBody();
+    $url = trim((string)($body['url'] ?? ''));
+    $referer = trim((string)($body['referer'] ?? ''));
+    $lang = strtolower(trim((string)($body['lang'] ?? 'id')));
+    $mode = strtolower(trim((string)($body['mode'] ?? 'gtx+')));
+    $vttText = trim((string)($body['vtt_text'] ?? ''));
+
+    if (empty($url) || empty($vttText)) {
+        return ['success' => false, 'error' => 'url and vtt_text are required'];
+    }
+
+    $baseHash = sha1($url . '|' . $referer . '|' . $lang);
+    $keyGtx = 'sub2|gtx|' . $baseHash;
+    $keyGtxPlus = 'sub2|gtx+|' . $baseHash;
+    $keySubVtt = 'sub_vtt_' . md5($url . '_' . $lang);
+
+    Database::setSubtitleCache($keyGtxPlus, $vttText);
+    Database::setSubtitleCache($keyGtx, $vttText);
+    Database::setSubtitleCache($keySubVtt, $vttText);
+    Cache::set($keySubVtt, $vttText, 86400 * 30);
+
     return ['success' => true, 'data' => true];
 });
 

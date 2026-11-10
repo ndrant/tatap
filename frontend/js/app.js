@@ -1,3 +1,37 @@
+// Polyfill HTMLMediaElement.prototype.buffered / seekable / played for headless / test / limited WebView environments
+if(typeof window !== "undefined" && typeof HTMLMediaElement !== "undefined"){
+  var createEmptyTimeRanges = function(){
+    return {
+      length: 0,
+      start: function(){ return 0; },
+      end: function(){ return 0; }
+    };
+  };
+  try {
+    var descB = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "buffered");
+    if(!descB || !("buffered" in HTMLMediaElement.prototype)){
+      Object.defineProperty(HTMLMediaElement.prototype, "buffered", {
+        get: function(){ return this._mockBuffered || createEmptyTimeRanges(); },
+        configurable: true
+      });
+    }
+    var descP = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "played");
+    if(!descP || !("played" in HTMLMediaElement.prototype)){
+      Object.defineProperty(HTMLMediaElement.prototype, "played", {
+        get: function(){ return this._mockPlayed || createEmptyTimeRanges(); },
+        configurable: true
+      });
+    }
+    var descS = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "seekable");
+    if(!descS || !("seekable" in HTMLMediaElement.prototype)){
+      Object.defineProperty(HTMLMediaElement.prototype, "seekable", {
+        get: function(){ return this._mockSeekable || createEmptyTimeRanges(); },
+        configurable: true
+      });
+    }
+  } catch(_){}
+}
+
 var cur = {slug:"", title:"", ep:1, mode:"sub", quality:"best", res:null, eps:[], watched:{}, lastWatchedEp:null,
             subLang:"English",    // preferensi bahasa user dari /api/settings
             activeSub:null,       // URL track subtitle yang sedang aktif (live switch)
@@ -778,8 +812,12 @@ function updateBookmarkBtn(isBookmarked){
 function checkModalBookmark(slug){
   window.Tatap.checkBookmark(slug).then(function(r){
     if(cur.slug !== slug) return;
-    if(r && r.success && r.data){
-      updateBookmarkBtn(!!r.data.bookmarked);
+    if(r && r.success){
+      var isBm = false;
+      if(r.data && typeof r.data.bookmarked !== "undefined") isBm = !!r.data.bookmarked;
+      else if(typeof r.bookmarked !== "undefined") isBm = !!r.bookmarked;
+      else if(typeof r.data === "boolean") isBm = r.data;
+      updateBookmarkBtn(isBm);
     }
   }).catch(function(){});
 }
@@ -1293,7 +1331,8 @@ function loadEps(){
     }
     return base + " · " + cur.mode.toUpperCase();
   };
-  var cached = _epsMemCache[thisSlug];
+  var memKey = (cur.source || "hianime") + ":" + thisSlug;
+  var cached = _epsMemCache[memKey];
   if(cached && thisSlug === cur.slug){
     cur.eps = cached;
     $("tm-count").textContent = countLabel();
@@ -1301,14 +1340,14 @@ function loadEps(){
     renderEpGrid();
   }
 
-  window.Tatap.episodes(thisSlug, cur.title).then(function(r){
+  window.Tatap.episodes(thisSlug, cur.title, cur.source).then(function(r){
     if(thisSlug !== cur.slug) return;
     if(!r.success){
       if(!cached) $("tm-count").textContent = "error: " + r.error;
       return;
     }
     cur.eps = r.data.episodes || [];
-    _epsMemCache[thisSlug] = cur.eps;
+    _epsMemCache[memKey] = cur.eps;
     if(r.data.detail || r.data.synopsis){
       var detail = Object.assign({}, cur.meta || {}, r.data.detail || {});
       if(r.data.synopsis && (!detail.synopsis || r.data.synopsis.length > detail.synopsis.length)){
@@ -1788,9 +1827,10 @@ function openPlayer(ep, resumeTime, forceRefresh){
       }).catch(function(){});
     }
     cur.source=r.data.source||"hianime";
-    var picked=r.data.picked||(r.data.variants&&r.data.variants[0])||{q:"HD",url:r.data.master||""};
+    var picked=r.data.picked||(r.data.variants&&r.data.variants[0])||{q:"HD",quality:"HD",url:r.data.master||""};
+    var pickedQStr=String(picked.q||picked.quality||"HD").toUpperCase();
     var srvText=r.data.server||"";
-    $("pm-meta").innerHTML="ep "+ep+" · "+cur.mode.toUpperCase()+" · "+picked.q+" · <button id='pm-source-btn' class='server-badge' title='Klik untuk switch sumber' style='background:none;border:1px solid rgba(255,255,255,0.25);color:var(--accent);cursor:pointer;border-radius:4px;padding:1px 6px;font:inherit;'>"+esc(srvText)+" ⇄</button>"+(r.data.cached?" · cached":" · "+(Date.now()-t0)+"ms");
+    $("pm-meta").innerHTML="ep "+ep+" · "+cur.mode.toUpperCase()+" · "+pickedQStr+" · <button id='pm-source-btn' class='server-badge' title='Klik untuk switch sumber' style='background:none;border:1px solid rgba(255,255,255,0.25);color:var(--accent);cursor:pointer;border-radius:4px;padding:1px 6px;font:inherit;'>"+esc(srvText)+" ⇄</button>"+(r.data.cached?" · cached":" · "+(Date.now()-t0)+"ms");
     var srvBtn=$("pm-source-btn");
     if(srvBtn){
       srvBtn.onclick=function(){
@@ -1834,7 +1874,9 @@ function renderVariants(){
   var box=$("pm-variants");if(box)box.innerHTML="";
   var sel=$("pm-quality-select");if(sel)sel.innerHTML="";
   var vs=(cur.res&&cur.res.hlsLevels&&cur.res.hlsLevels.length)?cur.res.hlsLevels:((cur.res&&cur.res.variants)||[]);
-  var activeQ=(cur.res&&cur.res.picked&&cur.res.picked.q)||(vs[0]&&vs[0].q)||"";
+  var pickedQ = (cur.res && cur.res.picked && (cur.res.picked.q || cur.res.picked.quality)) || "";
+  var firstQ = (vs[0] && (vs[0].q || vs[0].quality)) || "";
+  var activeQ = String(pickedQ || firstQ || "auto");
   if(window._hls && cur.res && cur.res.hlsLevels && cur.res.hlsLevels.length){
     if(window._hls.autoLevelEnabled || window._hls.currentLevel === -1){
       activeQ = "Auto";
@@ -1843,18 +1885,19 @@ function renderVariants(){
 
   for(var i=0;i<vs.length;i++){
     (function(v){
+      var vq = String(v.q || v.quality || "auto");
       if(box){
         var b=document.createElement("button");
-        b.textContent=v.q;
-        if(v.q.toLowerCase()===activeQ.toLowerCase())b.className="active";
-        b.addEventListener("click",function(){switchQ(v.q);});
+        b.textContent=vq;
+        if(vq.toLowerCase()===activeQ.toLowerCase())b.className="active";
+        b.addEventListener("click",function(){switchQ(vq);});
         box.appendChild(b);
       }
       if(sel){
         var opt=document.createElement("option");
-        opt.value=v.q;
-        opt.textContent=v.q.toUpperCase();
-        if(v.q.toLowerCase()===activeQ.toLowerCase())opt.selected=true;
+        opt.value=vq;
+        opt.textContent=vq.toUpperCase();
+        if(vq.toLowerCase()===activeQ.toLowerCase())opt.selected=true;
         sel.appendChild(opt);
       }
     })(vs[i]);
@@ -4942,7 +4985,8 @@ function switchQ(q){
   if(!cur.res||!cur.res.variants)return;
   var curTime = (window.art && !isNaN(window.art.currentTime)) ? window.art.currentTime : (($("vid") && $("vid").currentTime) || 0);
   for(var i=0;i<cur.res.variants.length;i++){
-    if(cur.res.variants[i].q.toLowerCase()===qLow){
+    var vq = String(cur.res.variants[i].q || cur.res.variants[i].quality || "");
+    if(vq.toLowerCase()===qLow){
       cur.res.picked=cur.res.variants[i];
       renderVariants();
       syncArtplayerQuality();
@@ -6092,9 +6136,25 @@ function switchSource(targetSource){
   }
   var label = nextSource === "otakudesu" ? "Otakudesu (Sub Indo)" : (nextSource === "anichan" ? "AniChan (Failover)" : "HiAnime");
   toast("Sumber: " + label);
+
+  // If in detail page or title modal, reload episodes immediately in real time
+  var dp = $("detail-page");
+  var tm = $("title-modal");
+  var inDetail = (dp && !dp.classList.contains("hidden")) || (tm && !tm.classList.contains("hidden"));
+  if(inDetail && cur.slug){
+    loadEps();
+  }
+
+  // If player modal is open, reload stream with new source at same position
   if(!$("player-modal").classList.contains("hidden") && cur.ep){
     openPlayer(cur.ep, curTime);
   }
+
+  // If in main catalog/view, reload view in real time
+  if(!inDetail && window.Tui && window.Tui.loadView){
+    window.Tui.loadView();
+  }
+
   return nextSource;
 }
 
@@ -6738,6 +6798,7 @@ window.TatapTheme = TatapTheme;
 var TatapSfx = (function(){
   var audioCtx = null;
   var lastTick = 0;
+  var unlocked = false;
 
   function isEnabled(){
     return localStorage.getItem("tatap_sfx_enabled") !== "0";
@@ -6763,6 +6824,7 @@ var TatapSfx = (function(){
   }
 
   function getCtx(){
+    if(!unlocked) return null;
     if(!audioCtx && (window.AudioContext || window.webkitAudioContext)){
       try {
         var AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -6790,9 +6852,10 @@ var TatapSfx = (function(){
 
   function play(type){
     if(!isEnabled()) return;
+    if(!unlocked) return;
     if(isPlayerActive()) return;
     var ctx = getCtx();
-    if(!ctx) return;
+    if(!ctx || ctx.state === "suspended") return;
 
     var now = ctx.currentTime;
 
@@ -6882,12 +6945,15 @@ var TatapSfx = (function(){
 
   function initUnlock(){
     function unlock(){
+      unlocked = true;
       getCtx();
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
+      window.removeEventListener("click", unlock);
     }
     window.addEventListener("pointerdown", unlock, {once:true});
     window.addEventListener("keydown", unlock, {once:true});
+    window.addEventListener("click", unlock, {once:true});
   }
 
   return {

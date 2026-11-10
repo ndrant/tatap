@@ -64,7 +64,12 @@ browse:function(params,page){
   for (var k in params) if (params[k]) qs += "&"+encodeURIComponent(k)+"="+encodeURIComponent(params[k]);
   return jget("/api/browse?page="+(page||1)+qs+"&safe_mode="+sm);
 },
-episodes:function(slug,title){return jget("/api/anime/"+encodeURIComponent(slug)+"/episodes"+(title?"?title="+encodeURIComponent(title):""));},
+episodes:function(slug,title,source){
+  var qs=[];
+  if(title) qs.push("title="+encodeURIComponent(title));
+  if(source) qs.push("source="+encodeURIComponent(source));
+  return jget("/api/anime/"+encodeURIComponent(slug)+"/episodes"+(qs.length?"?"+qs.join("&"):""));
+},
 animeDetail:function(slug,title){return jget("/api/anime/"+encodeURIComponent(slug)+"/detail"+(title?"?title="+encodeURIComponent(title):""));},
 relations:function(slug,title){return jget("/api/anime/"+encodeURIComponent(slug)+"/relations?title="+encodeURIComponent(title||""));},
 resolve:function(slug,ep,mode,q,source,force,title){return jget("/api/stream/resolve?slug="+encodeURIComponent(slug)+"&ep="+ep+"&mode="+(mode||"sub")+"&q="+(q||"best")+(source?"&source="+encodeURIComponent(source):"")+(force?"&force=true":"")+(title?"&title="+encodeURIComponent(title):""));},

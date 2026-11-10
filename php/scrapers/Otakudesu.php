@@ -10,11 +10,34 @@ class Otakudesu
 {
     public const BASE_URL = 'https://ww2.otakudesu.biz';
 
+    public static function extractSeasonNum(string $t): int
+    {
+        $t = strtolower(trim($t));
+        if (preg_match('/\b(?:season\s*(\d+)|(\d+)(?:nd|rd|th|st)\s*season|part\s*(\d+)|s(\d+)|finale\s*(\d+))\b|(?:\b|\s)(\d+)$/i', $t, $m)) {
+            for ($i = 1; $i < count($m); $i++) {
+                if (isset($m[$i]) && $m[$i] !== '') {
+                    return (int)$m[$i];
+                }
+            }
+        }
+        if (preg_match('/\b(ii|iii|iv|v|vi)\b/i', $t, $mr)) {
+            $roman = ['ii' => 2, 'iii' => 3, 'iv' => 4, 'v' => 5, 'vi' => 6];
+            return $roman[strtolower($mr[1])] ?? 1;
+        }
+        return 1;
+    }
+
     public static function isTitleMatch(string $a, string $b): bool
     {
+        $seasonA = self::extractSeasonNum($a);
+        $seasonB = self::extractSeasonNum($b);
+        if (($seasonA > 1 || $seasonB > 1) && $seasonA !== $seasonB) {
+            return false;
+        }
+
         $clean = function(string $s): array {
             $s = strtolower($s);
-            $s = preg_replace('/\b(sub|indo|subtitle|indonesia|batch|lengkap|season|\d+)\b/', '', $s);
+            $s = preg_replace('/\b(sub|indo|subtitle|indonesia|batch|lengkap)\b/', '', $s);
             $s = preg_replace('/[^\w\s]/', ' ', $s);
             $tokens = preg_split('/\s+/', trim($s));
             return array_filter($tokens ?: [], function($t) {
@@ -117,26 +140,68 @@ class Otakudesu
         return array_slice($results, 0, $limit);
     }
 
-    public static function episodes(string $slugOrUrl): array
+    public static function episodes(string $slugOrUrl, string $title = ''): array
     {
-        $url = strpos($slugOrUrl, 'http') === 0 ? $slugOrUrl : self::BASE_URL . '/anime/' . trim($slugOrUrl, '/') . '/';
-        $cacheKey = 'otaku_eps_' . md5($url);
+        $raw = trim($slugOrUrl);
+        if (empty($raw) || Anilist::isHentai($raw)) {
+            return [];
+        }
+
+        if (strpos($raw, 'http') === 0) {
+            $url = $raw;
+        } else {
+            $cleanSlug = strpos($raw, 'otakudesu:') === 0 ? substr($raw, 10) : $raw;
+            $cleanSlug = strpos($cleanSlug, 'anichan:') === 0 ? substr($cleanSlug, 8) : $cleanSlug;
+            $url = self::BASE_URL . '/anime/' . trim($cleanSlug, '/') . '/';
+        }
+
+        $cacheKey = 'otaku_eps_' . md5($url . '|' . $title);
         $cached = Cache::get($cacheKey, 1800);
         if ($cached !== null && is_array($cached)) {
             return $cached;
         }
 
         $res = Http::get($url, [], 10, self::BASE_URL . '/');
-        if ($res['status'] !== 200 || empty($res['body'])) {
-            return [];
+        if ($res['status'] === 200 && !empty($res['body'])) {
+            $eps = self::parseEpisodesHtml($res['body']);
+            if (!empty($eps)) {
+                Cache::set($cacheKey, $eps, 1800);
+                return $eps;
+            }
         }
 
-        $eps = self::parseEpisodesHtml($res['body']);
-        if (!empty($eps)) {
-            Cache::set($cacheKey, $eps, 1800);
+        // Fallback: If direct /anime/ slug 404s, search by title or slug
+        $searchQuery = !empty($title) ? $title : str_replace('-', ' ', $slugOrUrl);
+        if (preg_match('/^(.+?)-(\d{3,})$/', $searchQuery, $pm)) {
+            $searchQuery = str_replace('-', ' ', $pm[1]);
+        }
+        $cleanTitle = trim(preg_replace('/[^\w\s:]/u', ' ', $searchQuery));
+        $cleanTitle = preg_replace('/\s+/', ' ', $cleanTitle);
+
+        if (!empty($cleanTitle)) {
+            $searchRes = self::search($cleanTitle);
+            if (!empty($searchRes)) {
+                $matched = null;
+                foreach ($searchRes as $item) {
+                    if (self::isTitleMatch($cleanTitle, $item['title'])) {
+                        $matched = $item;
+                        break;
+                    }
+                }
+                if ($matched && !empty($matched['url'])) {
+                    $subRes = Http::get($matched['url'], [], 10, self::BASE_URL . '/');
+                    if ($subRes['status'] === 200 && !empty($subRes['body'])) {
+                        $eps = self::parseEpisodesHtml($subRes['body']);
+                        if (!empty($eps)) {
+                            Cache::set($cacheKey, $eps, 1800);
+                            return $eps;
+                        }
+                    }
+                }
+            }
         }
 
-        return $eps;
+        return [];
     }
 
     public static function decryptPutarinConfig(string $embedUrl): ?array
@@ -202,11 +267,17 @@ class Otakudesu
 
     public static function resolveStream(string $titleOrSlug, int $ep = 1): ?array
     {
-        if (Anilist::isHentai($titleOrSlug)) {
+        if (empty($titleOrSlug) || Anilist::isHentai($titleOrSlug)) {
             return null;
         }
 
-        $cleanTitle = trim(str_replace('-', ' ', preg_replace('/-\d+$/', '', $titleOrSlug)));
+        $raw = str_replace('-', ' ', $titleOrSlug);
+        if (preg_match('/^(.+?)-(\d{3,})$/', $titleOrSlug, $pm)) {
+            $raw = str_replace('-', ' ', $pm[1]);
+        }
+        $cleanTitle = trim(preg_replace('/[^\w\s:]/u', ' ', $raw));
+        $cleanTitle = preg_replace('/\s+/', ' ', $cleanTitle);
+
         $searchRes = self::search($cleanTitle);
         if (empty($searchRes)) {
             return null;
@@ -218,10 +289,6 @@ class Otakudesu
                 $matched = $item;
                 break;
             }
-        }
-
-        if (!$matched) {
-            return null;
         }
 
         if (!$matched) {
@@ -293,9 +360,9 @@ class Otakudesu
             'source' => 'otakudesu',
             'master' => $masterUrl,
             'variants' => [
-                ['quality' => 'auto', 'url' => $masterUrl],
+                ['quality' => 'auto', 'q' => 'auto', 'url' => $masterUrl],
             ],
-            'picked' => ['quality' => 'auto', 'url' => $masterUrl],
+            'picked' => ['quality' => 'auto', 'q' => 'auto', 'url' => $masterUrl],
             'referer' => $origin . '/',
             'subtitles' => [],
             'intro' => ['start' => 0, 'end' => 0],

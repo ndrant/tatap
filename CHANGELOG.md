@@ -407,12 +407,28 @@ Kenaikan digit PATCH diterapkan sesuai kaidah Semantic Versioning 2.0.0 dan Dire
     - **Kebal Payload Bytes pada Cache Master & Rewrite:** Memperbaiki `_master_cache_set` dan `_rewrite_m3u8_content` agar secara otomatis men-decode payload `bytes` menjadi `str`, memberantas `TypeError: startswith first arg must be bytes` yang sebelumnya memicu crash pada generator stream saat memproses stream dari ZokoAnime/DramaHot.
     - **Sanitasi Domain Poster Unresolvable (`sanitizePosterUrl`):** Menyaring URL poster dari domain non-aktif (`img.hianime.to` / domain kadaluarsa) sebelum diteruskan ke elemen gambar dan Artplayer, mencegah error browser `net::ERR_NAME_NOT_RESOLVED` dan secara elegan menampilkan placeholder vektor poster Tatap.
     - **Pembersihan Residu Bookmark Database Uji:** Memperbaiki `tests/test_watch_history_thumbnail.py` dengan blok `try...finally` agar data uji bookmark dibersihkan secara tuntas dan tidak meninggalkan sampah di database `anime.db`.
+18. **Jelajah Terbaru Jadwal Rilis Harian Real-Time (`php/scrapers/Anilist.php`, `php/index.php`, `frontend/js/term.js`):**
+    - **Penyelarasan Filter Hari Rilis:** Memperbaiki endpoint `/api/schedule` dan `/api/upcoming-episodes` pada backend PHP yang sebelumnya mengabaikan parameter `day` dan selalu mengembalikan daftar anime statis.
+    - **GraphQL Multi-Page Range Fetcher:** Mengimplementasikan `Anilist::schedule($day, $safeMode)` yang mengeksekusi multi-page GraphQL AniList `airingSchedules` dalam rentang Senin 00:00 WIB hingga Minggu 23:59 WIB, dikelompokkan ke dalam bucket hari Senin–Minggu secara dinamis (`items`, `weekday`, `day_name`, `current_day`, `is_today`, `counts`).
+19. **Peralihan Sumber Anime Real-Time (`php/scrapers/Otakudesu.php`, `php/index.php`, `frontend/js/api.js`, `frontend/js/app.js`):**
+    - **Sinkronisasi Parameter Sumber:** Menambahkan parameter `source` pada `window.Tatap.episodes()` dan endpoint backend `GET /api/anime/{slug}/episodes`, memprioritaskan Otakudesu saat `source=otakudesu`.
+    - **Isolasi Memori Cache Episode:** Mengisolasi `_epsMemCache` dengan key gabungan sumber dan slug (`(cur.source || "hianime") + ":" + thisSlug`), mencegah kontaminasi episode lintas penyedia stream.
+    - **Pemuatan Ulang Seketika (Instant Reload):** Memperbarui `switchSource()` di `app.js` agar memicu `loadEps()` seketika saat berada di halaman detail anime, me-reload video player stream pada timestamp yang sama jika player sedang terbuka, serta me-reload tampilan katalog/terbaru secara real time.
+    - **Fallback Pencarian Judul Otomatis:** Meningkatkan `Otakudesu::episodes()` dengan fallback pencarian judul otomatis saat slug direct menghasilkan 404.
+20. **Dukungan Penuh Cross-Filter Katalog Bebas (`php/scrapers/Anilist.php`, `php/index.php`):**
+    - **Eksekusi Parameter Cross-Filter:** Mengimplementasikan `Anilist::browse()` dengan pemetaan lengkap parameter GraphQL AniList (`sort`, `format`, `status`, `season`, `seasonYear`, dan `genre`) pada endpoint `GET /api/browse`, menggantikan respons statis sebelumnya.
+21. **Persistent SQLite Subtitle Caching & Multi-Endpoint GTX Translation (`php/core/Database.php`, `php/scrapers/Translate.php`, `php/index.php`):**
+    - **Penyimpanan Permanen Subtitle SQLite:** Menambahkan tabel `subtitle_cache` pada database SQLite dan rute `POST /api/player/sub_cache_save` untuk penyimpanan permanen VTT terjemahan.
+    - **Ketahanan HTTP 429 Google Translate:** Memperbarui `Translate::fetchAndTranslateVtt` dengan lookup SQLite cache dan migrasi endpoint Google Translate GTX ke POST pooled endpoints (`clients5.google.com`), mengeliminasi blokir rate limit.
+22. **Polyfill HTMLMediaElement TimeRanges (`frontend/js/app.js`):**
+    - Menambahkan polyfill mock `TimeRanges` (`buffered`, `played`, `seekable`) pada `HTMLMediaElement.prototype` untuk stabilitas inisialisasi ArtPlayer 5.4.0 pada headless browser dan minimal WebView.
 
 ### Tests
 - Memperluas test suite `tests/test_subtitle_style_settings.py` untuk menguji font family (`--sub-font`), `FONT_MAP`, `setSubFont`, modal styler `#sub-style-modal`, live preview `#sub-preview-box`, dan integrasi terminal `:substyle` / `:styler`.
 - Menambahkan test suite `tests/test_subtitle_accuracy.py` untuk menguji eliminasi kandidat subtitle Bahasa Melayu saat mencari Bahasa Indonesia, penolakan label Melayu AnimeTosho, dan normalisasi leksikon Melayu-ke-Indonesia.
 - Menambahkan test suite `tests/test_custom_prompt.py` untuk menguji pembuatan system prompt dengan instruksi khusus pengguna, prioritas prompt, dan persistensi database settings.
 - Menambahkan test suite `tests/test_stream_optimizations.py` untuk menguji cache master m3u8, in-memory segment ring cache, non-blocking AniSkip resolving, dan endpoint skip times.
+- Menambahkan 84 pengujian otomatis backend PHP di `tests/test_php_backend.php` (router, multi-visitor isolation, AniList GraphQL, HiAnime AES/XOR, Otakudesu, AniSkip, Google Translate GTX, M3U8 proxy, subtitle cache, 7-day schedule, browse cross-filter, dan episode resolution).
 
 ## [2.12.6] - 2026-11-01
 

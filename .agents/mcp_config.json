@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "lightpanda",
+      "args": ["mcp"],
+      "timeout": 120000
+    },
+    "context7": {
+      "description": "Context7 Documentation & Reference MCP",
+      "status": "active"
+    }
+  }
+}

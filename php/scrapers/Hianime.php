@@ -143,7 +143,7 @@ class Hianime
         $slug = trim($slug);
         $parts = explode('-', $slug);
         $last = end($parts);
-        if (is_numeric($last)) {
+        if (count($parts) > 1 && is_numeric($last) && (int)$last > 99) {
             return $slug;
         }
 
@@ -153,9 +153,19 @@ class Hianime
             return $cached ?: null;
         }
 
-        $query = !empty($title) ? $title : str_replace('-', ' ', $slug);
+        $query = !empty($title) ? $title : (is_numeric($slug) ? '' : str_replace('-', ' ', $slug));
+        if (empty($query) && is_numeric($slug)) {
+            $detail = Anilist::detail($slug);
+            if ($detail && !empty($detail['title'])) {
+                $query = $detail['title'];
+            }
+        }
+        if (empty($query)) {
+            return null;
+        }
+
         $res = self::search($query);
-        if (empty($res) && !empty($title)) {
+        if (empty($res) && !empty($title) && !is_numeric($slug)) {
             $res = self::search(str_replace('-', ' ', $slug));
         }
 
@@ -166,9 +176,6 @@ class Hianime
                     $picked = $item['id'];
                     break;
                 }
-            }
-            if (!$picked && !empty($res[0]['id'])) {
-                $picked = $res[0]['id'];
             }
         }
 
@@ -194,7 +201,7 @@ class Hianime
         $numeric = end($parts);
         $effSlug = $slug;
 
-        if (!is_numeric($numeric)) {
+        if (count($parts) <= 1 || !is_numeric($numeric) || (int)$numeric <= 99) {
             $resolved = self::resolveSlug($slug, $title);
             if ($resolved) {
                 $effSlug = $resolved;
@@ -217,6 +224,22 @@ class Hianime
         }
 
         $eps = self::parseEpisodesHtml($html);
+        if (empty($eps) && $effSlug === $slug && (!empty($title) || !empty($slug))) {
+            $resolved = self::resolveSlug($slug, $title);
+            if ($resolved && $resolved !== $slug) {
+                $p2 = explode('-', $resolved);
+                $num2 = end($p2);
+                if (is_numeric($num2)) {
+                    $url2 = self::BASE_URL . '/api/theme/episode/list/' . $num2;
+                    $res2 = Http::get($url2, [], 10, self::BASE_URL . '/' . $resolved);
+                    if ($res2['status'] === 200 && !empty($res2['body'])) {
+                        $json2 = json_decode($res2['body'], true);
+                        $eps = self::parseEpisodesHtml($json2['html'] ?? $res2['body']);
+                    }
+                }
+            }
+        }
+
         if (!empty($eps)) {
             Cache::set($cacheKey, $eps, 3600);
         }
@@ -256,13 +279,49 @@ class Hianime
             return null;
         }
 
+        $parsed = parse_url($embedUrl);
+        $origin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+
+        // 1. Check window.__P pattern (ZokoAnime, VidPlay, MegaCloud legacy)
+        if (preg_match('/window\.__P\s*=\s*"([^"]*)"/', $embedRes['body'], $pm)) {
+            $key = 'otaku-embed-v1';
+            $kLen = strlen($key);
+            $raw = base64_decode($pm[1]);
+            if ($raw !== false && $raw !== '') {
+                $out = '';
+                for ($i = 0; $i < strlen($raw); $i++) {
+                    $out .= chr(ord($raw[$i]) ^ ord($key[$i % $kLen]));
+                }
+                $cfg = json_decode($out, true);
+                if (is_array($cfg)) {
+                    $master = $cfg['src'] ?? '';
+                    if (empty($master) && !empty($cfg['sources']) && is_array($cfg['sources'])) {
+                        $master = $cfg['sources'][0]['src'] ?? $cfg['sources'][0]['file'] ?? '';
+                    }
+                    if (!empty($master)) {
+                        $subtitles = [];
+                        foreach ($cfg['subtitles'] ?? [] as $t) {
+                            $subtitles[] = [
+                                'url' => $t['src'] ?? $t['file'] ?? '',
+                                'label' => $t['label'] ?? $t['lang'] ?? 'English',
+                                'default' => (bool)($t['default'] ?? false),
+                            ];
+                        }
+                        return [
+                            'master' => $master,
+                            'referer' => $origin . '/',
+                            'subtitles' => $subtitles,
+                        ];
+                    }
+                }
+            }
+        }
+
         if (!preg_match('/data-id="(\d+)"/', $embedRes['body'], $m)) {
             return null;
         }
 
         $dataId = $m[1];
-        $parsed = parse_url($embedUrl);
-        $origin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
 
         $apiUrl = $origin . '/stream/getSourcesNew?id=' . $dataId;
         $res = Http::get($apiUrl, [], 10, $embedUrl);
@@ -385,9 +444,9 @@ class Hianime
             'server' => $chosenServer['name'],
             'master' => $sources['master'],
             'variants' => [
-                ['quality' => 'auto', 'url' => $sources['master']],
+                ['quality' => 'auto', 'q' => 'auto', 'url' => $sources['master']],
             ],
-            'picked' => ['quality' => 'auto', 'url' => $sources['master']],
+            'picked' => ['quality' => 'auto', 'q' => 'auto', 'url' => $sources['master']],
             'referer' => $sources['referer'],
             'subtitles' => $sources['subtitles'],
             'intro' => ['start' => 0, 'end' => 0],
