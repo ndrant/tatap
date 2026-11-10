@@ -16,9 +16,12 @@
 - [x] **Jelajah Terbaru Day Schedule Real-Time Filtering**: Added `Anilist::schedule` GraphQL `airingSchedules` range fetcher and 7-day Monday–Sunday grouping in `php/scrapers/Anilist.php`, connected `/api/schedule` in `php/index.php`, and verified live in Lightpanda across all day chips (Senin–Minggu).
 - [x] **Real-Time Anime Source Switching (HiAnime ⇄ Otakudesu ⇄ AniChan)**: Added `source` parameter to `GET /api/anime/{slug}/episodes`, enhanced `Otakudesu::episodes` with title fallback search, partitioned `_epsMemCache` by source, and updated `switchSource()` in `frontend/js/app.js` to reload episodes immediately in real time on detail page and player modal.
 - [x] **Catalog Cross-Filter Support on `/api/browse`**: Implemented `Anilist::browse()` supporting `sort`, `type`, `format`, `status`, `season`, `year`, and `genre`, and connected `/api/browse` in `php/index.php`. Verified live cross-filtering in Lightpanda.
+- [x] **Git Upstream Rebase & Synchronization**: Resolved divergence between local commits and remote upstream commits (`910cd91`), rebased cleanly with 0 conflicts, and pushed to `origin/main` (`55fa817`).
 - [x] **E2E Lightpanda Modal & Tab Sweep**: Tested all navigation tabs, filter modals, help overlays, and AI fansub settings with 0 console warnings/errors.
 - [x] **Pytest Environment Configuration**: Installed pytest in `./venv/bin/pytest` and verified `tests/test_semver.py` (5/5 PASS).
 - [x] **Regression & Staging Sync**: Expanded test suite to 84 assertions in `php tests/test_php_backend.php` (all PASS) and synced distribution via `python3 tools/build_php_web.py`.
 
 ## Pending Tasks
 - [ ] **P4 — Directive Adherence**: Adhere strictly to Directive 8 (No version bump while v2.12.7 is in draft) and Directive 9 (Zero desktop/Android binary build during web iterations).
+- [ ] **P5 — Post-Release Sync Preparation**: When v2.12.7 draft is published officially by user (`isDraft: false`), run `python3 tools/bump_version.py --sync-readme` to update download links.
+- [ ] **P6 — Ongoing Performance & Scraper Health Monitoring**: Monitor AniList GraphQL rate limits and Otakudesu mirror stability.

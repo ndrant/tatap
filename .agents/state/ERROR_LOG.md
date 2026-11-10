@@ -88,3 +88,10 @@
   3. Partitioned `_epsMemCache` by `(cur.source || "hianime") + ":" + thisSlug`.
   4. Updated `switchSource()` to trigger `loadEps()` when on detail view and `loadView()` when on catalog view.
 - **Verification:** Verified in Lightpanda: clicking source switch dynamically toggles badges and re-fetches episodes from the selected provider in real time.
+
+## Incident 10: Divergent Remote Upstream Branch during `git pull`
+- **Severity:** P3 (Version control workflow divergence)
+- **Symptom:** `git pull --tags origin main` aborted with `fatal: Need to specify how to reconcile divergent branches` and `git push origin main:main` was rejected due to non-fast-forward.
+- **Root Cause:** Remote upstream received 3 commits (`b48655c`, `dda3fcd`, `910cd91`) updating Google Gemini model chains while local work was committed on top of the older branch tip.
+- **Resolution:** Rebased local commits onto `origin/main` cleanly using `git pull --rebase origin main` (0 conflicts), re-verified all test suites, and pushed cleanly to remote `origin/main` (`55fa817`).
+- **Verification:** `git status` shows `Your branch is up to date with 'origin/main'. nothing to commit, working tree clean`.
