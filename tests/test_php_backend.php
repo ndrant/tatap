@@ -312,7 +312,43 @@ assert_true(strpos($translatedVtt, 'WEBVTT') !== false, 'translated VTT preserve
 assert_true(strpos($translatedVtt, '00:00:01.000 --> 00:00:04.000') !== false, 'translated VTT preserves timestamps');
 
 echo "\nTask 6 Tests Passed Successfully!\n";
+
+// --- Task 7 Tests: Video Stream Relay & M3U8 Proxy ---
+echo "\nTesting Task 7: Video Stream Relay & M3U8 Proxy...\n";
+
+require_once __DIR__ . '/../php/player/VideoProxy.php';
+
+use Tatap\Player\VideoProxy;
+
+// 1. SSRF Protection Test
+assert_equals(false, VideoProxy::isAllowedUrl('http://127.0.0.1:8080/secret'), 'SSRF guard blocks localhost');
+assert_equals(false, VideoProxy::isAllowedUrl('http://169.254.169.254/latest/meta-data/'), 'SSRF guard blocks cloud metadata');
+assert_equals(false, VideoProxy::isAllowedUrl('file:///etc/passwd'), 'SSRF guard blocks file scheme');
+assert_equals(true, VideoProxy::isAllowedUrl('https://megacloud.tv/embed-2/e-1'), 'SSRF guard allows streaming domain');
+
+// 2. M3U8 URL Rewriter Test
+$sampleM3u8 = <<<M3U8
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=1280x720
+720p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=1920x1080
+1080p.m3u8
+M3U8;
+
+$rewrittenM3u8 = VideoProxy::rewriteM3u8(
+    $sampleM3u8,
+    'https://cdn.example.com/hls/master.m3u8',
+    'https://megaplay.buzz/'
+);
+
+assert_true(strpos($rewrittenM3u8, '/api/player/video?url=') !== false, 'M3U8 rewriter prefixes URLs with proxy endpoint');
+assert_true(strpos($rewrittenM3u8, '720p.m3u8') !== false, 'M3U8 rewriter contains 720p target');
+assert_true(strpos($rewrittenM3u8, 'referer=') !== false, 'M3U8 rewriter attaches referer parameter');
+
+echo "\nTask 7 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 
 
 

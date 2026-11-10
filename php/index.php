@@ -18,6 +18,7 @@ require_once __DIR__ . '/scrapers/Hianime.php';
 require_once __DIR__ . '/scrapers/Otakudesu.php';
 require_once __DIR__ . '/scrapers/Aniskip.php';
 require_once __DIR__ . '/scrapers/Translate.php';
+require_once __DIR__ . '/player/VideoProxy.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
@@ -31,6 +32,7 @@ use Tatap\Scrapers\Hianime;
 use Tatap\Scrapers\Otakudesu;
 use Tatap\Scrapers\Aniskip;
 use Tatap\Scrapers\Translate;
+use Tatap\Player\VideoProxy;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -335,6 +337,15 @@ $router->add('GET', '/api/player/sub', function() {
     header('Cache-Control: public, max-age=86400');
     echo $vtt;
     exit;
+});
+
+// --- Low-Memory Streaming Video Proxy Route ---
+$router->add('GET', '/api/player/video', function() {
+    $url = (string)($_GET['url'] ?? '');
+    $referer = (string)($_GET['referer'] ?? '');
+    $range = $_SERVER['HTTP_RANGE'] ?? ($_GET['range'] ?? null);
+
+    VideoProxy::serve($url, $referer, $range);
 });
 
 // If run from web request, dispatch
