@@ -16,6 +16,7 @@ plan.md
 data/*.sqlite*
 data/cache/
 php_dist/
+.DS_Store
 .gradle/
 build/
 **/build/
