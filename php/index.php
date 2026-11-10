@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace Tatap;
 
+// Prevent PHP warnings/deprecations from corrupting JSON payloads
+@ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/core/Response.php';
 require_once __DIR__ . '/core/Router.php';

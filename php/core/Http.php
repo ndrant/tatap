@@ -56,7 +56,10 @@ class Http
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
+        if (\PHP_VERSION_ID < 80000) {
+            @curl_close($ch);
+        }
+        unset($ch);
 
         return [
             'status' => $httpCode,
