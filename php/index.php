@@ -59,7 +59,13 @@ $router = new Router();
 // Base health & info routes
 $router->add('GET', '/api/ping', function() {
     return [
+        'success' => true,
         'status' => 'ok',
+        'data' => [
+            'status' => 'running',
+            'version' => Config::VERSION,
+            'app' => Config::APP_NAME,
+        ],
         'app' => Config::APP_NAME,
         'version' => Config::VERSION,
         'timestamp' => time(),
@@ -68,7 +74,11 @@ $router->add('GET', '/api/ping', function() {
 
 $router->add('GET', '/api/version', function() {
     return [
+        'success' => true,
         'version' => Config::VERSION,
+        'data' => [
+            'version' => Config::VERSION,
+        ],
         'app' => Config::APP_NAME,
         'runtime' => 'PHP ' . PHP_VERSION,
     ];
@@ -76,7 +86,14 @@ $router->add('GET', '/api/version', function() {
 
 $router->add('GET', '/api/health', function() {
     return [
+        'success' => true,
         'status' => 'ok',
+        'data' => [
+            'status' => 'ok',
+            'php_version' => PHP_VERSION,
+            'data_dir' => is_writable(Config::dataDir()),
+            'cache_dir' => is_writable(Config::cacheDir()),
+        ],
         'php_version' => PHP_VERSION,
         'data_dir' => is_writable(Config::dataDir()),
         'cache_dir' => is_writable(Config::cacheDir()),
@@ -85,6 +102,13 @@ $router->add('GET', '/api/health', function() {
 
 $router->add('GET', '/api/update/check', function() {
     return [
+        'success' => true,
+        'data' => [
+            'has_update' => false,
+            'current_version' => Config::VERSION,
+            'latest_version' => Config::VERSION,
+            'update_available' => false,
+        ],
         'update_available' => false,
         'current_version' => Config::VERSION,
         'latest_version' => Config::VERSION,

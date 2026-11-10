@@ -7687,7 +7687,7 @@ function manualRetryBackend(){
 function copyBackendDebugInfo(){
   var brandEl = $("brand-ver");
   var ver = brandEl ? brandEl.textContent : "v2.10.0";
-  var apiHost = typeof apiBase === "function" ? (apiBase() || "http://127.0.0.1:8767 (origin)") : "http://127.0.0.1:8767";
+  var apiHost = typeof apiBase === "function" ? (apiBase() || (window.location && window.location.origin ? window.location.origin : "http://127.0.0.1:8767")) : "http://127.0.0.1:8767";
   var info = [
     "=== Tatap Backend Debug Info ===",
     "Version: " + ver,
