@@ -157,5 +157,41 @@ Bookmarks::remove($tokenA, 'one-piece');
 assert_equals(false, Bookmarks::check($tokenA, 'one-piece'), 'Visitor A bookmark removed');
 
 echo "\nTask 2 Tests Passed Successfully!\n";
+
+// --- Task 3 Tests: AniList GraphQL Scraper ---
+echo "\nTesting Task 3: AniList GraphQL Scraper...\n";
+
+require_once __DIR__ . '/../php/scrapers/Anilist.php';
+
+use Tatap\Scrapers\Anilist;
+
+// 1. Test Hentai Filter Zero Tolerance
+assert_equals(true, Anilist::isHentai('Hentai Movie'), 'Zero-tolerance filter flags hentai title');
+assert_equals(true, Anilist::isHentai('some hentai anime'), 'Zero-tolerance filter flags hentai substring');
+assert_equals(false, Anilist::isHentai('Naruto Shippuden'), 'Zero-tolerance filter passes safe anime');
+
+// 2. Test AniList Genres
+$genres = Anilist::genres(1);
+assert_true(is_array($genres), 'AniList genres returns array');
+assert_true(count($genres) > 0, 'AniList genres list is populated');
+$hasHentai = false;
+foreach ($genres as $g) {
+    $slug = strtolower($g['slug'] ?? '');
+    $title = strtolower($g['title'] ?? '');
+    if ($slug === 'hentai' || strpos($title, 'hentai') !== false) {
+        $hasHentai = true;
+    }
+}
+assert_equals(false, $hasHentai, 'AniList genres strictly excludes hentai');
+
+// 3. Test AniList Search Query
+$searchRes = Anilist::search('Frieren', 1, 5);
+assert_true(is_array($searchRes), 'AniList search returns array');
+assert_true(isset($searchRes['results']), 'AniList search contains results key');
+assert_true(count($searchRes['results']) > 0, 'AniList search returns Frieren results');
+assert_true(isset($searchRes['results'][0]['title']), 'Search result item has title');
+
+echo "\nTask 3 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 

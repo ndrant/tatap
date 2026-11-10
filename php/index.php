@@ -13,6 +13,7 @@ require_once __DIR__ . '/core/Session.php';
 require_once __DIR__ . '/user/History.php';
 require_once __DIR__ . '/user/Bookmarks.php';
 require_once __DIR__ . '/user/Settings.php';
+require_once __DIR__ . '/scrapers/Anilist.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
@@ -21,6 +22,7 @@ use Tatap\Core\Session;
 use Tatap\User\History;
 use Tatap\User\Bookmarks;
 use Tatap\User\Settings;
+use Tatap\Scrapers\Anilist;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -183,6 +185,68 @@ $router->add('POST', '/api/settings', function() use ($getJsonBody) {
         Settings::set($token, (string)$k, (string)$v);
     }
     return ['success' => true, 'data' => true];
+});
+
+// --- Catalog & Anime Metadata Routes (AniList) ---
+$router->add('GET', '/api/search', function() {
+    $q = (string)($_GET['q'] ?? '');
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = max(1, min(50, (int)($_GET['limit'] ?? 24)));
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $res = Anilist::search($q, $page, $limit, $safeMode);
+    return ['success' => true, 'data' => $res];
+});
+
+$router->add('GET', '/api/genres', function() {
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $res = Anilist::genres($safeMode);
+    return ['success' => true, 'data' => $res];
+});
+
+$router->add('GET', '/api/filters', function() {
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    return [
+        'success' => true,
+        'data' => [
+            'genres' => Anilist::genres($safeMode),
+            'types' => ['TV', 'Movie', 'OVA', 'ONA', 'Special'],
+            'statuses' => ['All', 'Releasing', 'Finished', 'Not Yet Aired'],
+            'seasons' => ['Winter', 'Spring', 'Summer', 'Fall'],
+        ],
+    ];
+});
+
+$router->add('GET', '/api/seasonal', function() {
+    $which = (string)($_GET['which'] ?? 'airing');
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = max(1, min(50, (int)($_GET['limit'] ?? 25)));
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $res = Anilist::seasonal($which, $page, $limit, $safeMode);
+    return ['success' => true, 'data' => $res];
+});
+
+$router->add('GET', '/api/catalog', function() {
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $res = Anilist::seasonal('popular', $page, 24, $safeMode);
+    return ['success' => true, 'data' => $res];
+});
+
+$router->add('GET', '/api/browse', function() {
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $res = Anilist::seasonal('popular', $page, 24, $safeMode);
+    return ['success' => true, 'data' => $res];
+});
+
+$router->add('GET', '/api/anime/{slug}/detail', function(array $params) {
+    $slug = $params['slug'] ?? '';
+    $detail = Anilist::detail($slug);
+    if (!$detail) {
+        Response::error('Anime detail not found', 404);
+        return;
+    }
+    return ['success' => true, 'data' => $detail];
 });
 
 // If run from web request, dispatch
