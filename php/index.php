@@ -16,6 +16,8 @@ require_once __DIR__ . '/user/Settings.php';
 require_once __DIR__ . '/scrapers/Anilist.php';
 require_once __DIR__ . '/scrapers/Hianime.php';
 require_once __DIR__ . '/scrapers/Otakudesu.php';
+require_once __DIR__ . '/scrapers/Aniskip.php';
+require_once __DIR__ . '/scrapers/Translate.php';
 
 use Tatap\Core\Router;
 use Tatap\Core\Response;
@@ -27,6 +29,8 @@ use Tatap\User\Settings;
 use Tatap\Scrapers\Anilist;
 use Tatap\Scrapers\Hianime;
 use Tatap\Scrapers\Otakudesu;
+use Tatap\Scrapers\Aniskip;
+use Tatap\Scrapers\Translate;
 
 // Determine URI path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -295,6 +299,42 @@ $router->add('GET', '/api/stream/resolve', function() {
         return;
     }
     return ['success' => true, 'data' => $stream];
+});
+
+// --- Skip Times & Subtitle Translation Routes ---
+$router->add('GET', '/api/episode/skip_times', function() {
+    $malId = (int)($_GET['mal_id'] ?? 0);
+    $ep = max(1, (int)($_GET['ep'] ?? 1));
+    $duration = (int)($_GET['duration'] ?? 0);
+    $slug = (string)($_GET['slug'] ?? '');
+
+    if ($malId <= 0 && !empty($slug)) {
+        $detail = Anilist::detail($slug);
+        if ($detail && !empty($detail['idMal'])) {
+            $malId = (int)$detail['idMal'];
+        }
+    }
+
+    $skip = Aniskip::lookup($malId, $ep, $duration);
+    return ['success' => true, 'data' => $skip];
+});
+
+$router->add('GET', '/api/player/sub', function() {
+    $url = (string)($_GET['url'] ?? '');
+    $lang = (string)($_GET['lang'] ?? 'id');
+    $referer = (string)($_GET['referer'] ?? '');
+
+    if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+        Response::error('Invalid subtitle URL', 400);
+        return;
+    }
+
+    $vtt = Translate::fetchAndTranslateVtt($url, $lang, $referer);
+    header('Content-Type: text/vtt; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Cache-Control: public, max-age=86400');
+    echo $vtt;
+    exit;
 });
 
 // If run from web request, dispatch

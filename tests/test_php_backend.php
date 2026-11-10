@@ -269,7 +269,51 @@ assert_equals(true, Otakudesu::isTitleMatch('Naruto Shippuden', 'Naruto Shippude
 assert_equals(false, Otakudesu::isTitleMatch('Bleach', 'Naruto Shippuden'), 'Title matching correctly rejects different anime');
 
 echo "\nTask 5 Tests Passed Successfully!\n";
+
+// --- Task 6 Tests: AniSkip & Google Translate GTX Proxy ---
+echo "\nTesting Task 6: AniSkip & Google Translate GTX Proxy...\n";
+
+require_once __DIR__ . '/../php/scrapers/Aniskip.php';
+require_once __DIR__ . '/../php/scrapers/Translate.php';
+
+use Tatap\Scrapers\Aniskip;
+use Tatap\Scrapers\Translate;
+
+// 1. Test AniSkip formatting helper
+$sampleAniSkipRaw = [
+    'found' => true,
+    'results' => [
+        [
+            'skipType' => 'op',
+            'interval' => ['startTime' => 85.5, 'endTime' => 175.5],
+        ],
+        [
+            'skipType' => 'ed',
+            'interval' => ['startTime' => 1320.0, 'endTime' => 1410.0],
+        ],
+    ],
+];
+$formattedSkip = Aniskip::formatSkipTimes($sampleAniSkipRaw);
+assert_true(isset($formattedSkip['op']), 'formatSkipTimes contains op');
+assert_true(isset($formattedSkip['ed']), 'formatSkipTimes contains ed');
+assert_equals(85.5, $formattedSkip['op']['start'], 'OP start time matches');
+assert_equals(175.5, $formattedSkip['op']['end'], 'OP end time matches');
+
+// 2. Test Google Translate GTX text translation
+$sampleEn = "Hello, welcome to Tatap.";
+$translatedId = Translate::translateText($sampleEn, 'id', 'en');
+assert_true(is_string($translatedId), 'translateText returns string');
+assert_true(strlen($translatedId) > 0, 'translateText returns non-empty result');
+
+// 3. Test VTT parsing & cue translation
+$sampleVtt = "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello world\n";
+$translatedVtt = Translate::translateVttString($sampleVtt, 'id');
+assert_true(strpos($translatedVtt, 'WEBVTT') !== false, 'translated VTT preserves WEBVTT header');
+assert_true(strpos($translatedVtt, '00:00:01.000 --> 00:00:04.000') !== false, 'translated VTT preserves timestamps');
+
+echo "\nTask 6 Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 
 
 
