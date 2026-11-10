@@ -4,11 +4,36 @@ function apiBase(){
   if(location.protocol === "file:" || !location.origin || location.origin === "null"){
     return "http://127.0.0.1:8767";
   }
+  var p = location.pathname || "";
+  var dir = p.replace(/\/[^\/]*$/, "");
+  if(dir && dir !== "/" && dir !== "\\"){
+    return dir.replace(/\/+$/, "");
+  }
   return "";
 }
-async function jget(u){var r=await fetch(apiBase()+u);return r.json();}
-async function jpost(u,b){var r=await fetch(apiBase()+u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b||{})});return r.json();}
-async function jdel(u){var r=await fetch(apiBase()+u,{method:"DELETE"});return r.json();}
+function getVisitorToken(){
+  var t = localStorage.getItem("tatap_visitor_token");
+  if(!t){
+    t = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    try{ localStorage.setItem("tatap_visitor_token", t); }catch(e){}
+  }
+  return t;
+}
+async function jget(u){
+  var h = {"X-Visitor-Token": getVisitorToken()};
+  var r = await fetch(apiBase()+u, {headers: h});
+  return r.json();
+}
+async function jpost(u,b){
+  var h = {"Content-Type": "application/json", "X-Visitor-Token": getVisitorToken()};
+  var r = await fetch(apiBase()+u, {method:"POST", headers: h, body: JSON.stringify(b||{})});
+  return r.json();
+}
+async function jdel(u){
+  var h = {"X-Visitor-Token": getVisitorToken()};
+  var r = await fetch(apiBase()+u, {method:"DELETE", headers: h});
+  return r.json();
+}
 window.Tatap={
 getSafeMode:function(){
   var sm = localStorage.getItem("tatap_safe_mode");
