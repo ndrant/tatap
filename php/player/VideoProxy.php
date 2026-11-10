@@ -34,9 +34,13 @@ class VideoProxy
             return false;
         }
 
-        // Check if IP is private
-        if (filter_var($host, FILTER_VALIDATE_IP)) {
-            if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        // Resolve host to IP and verify it is not private, loopback, or reserved
+        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : @gethostbyname($host);
+        if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
+            if ($ip === '127.0.0.1' || $ip === '0.0.0.0') {
+                return false;
+            }
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                 return false;
             }
         }

@@ -125,7 +125,23 @@ $router->add('GET', '/api/progress', function() {
     $slug = (string)($_GET['slug'] ?? '');
     $ep = (int)($_GET['ep'] ?? 1);
     $data = History::getProgress($token, $slug, $ep);
-    return ['success' => true, 'data' => $data ?: ['progress' => 0, 'duration' => 0]];
+    $prog = (int)($data['progress'] ?? 0);
+    $dur = (int)($data['duration'] ?? 0);
+    $shouldResume = ($prog >= 15);
+    if ($dur > 30 && $prog >= ($dur - 30)) {
+        $shouldResume = false;
+    }
+    return [
+        'success' => true,
+        'data' => [
+            'slug' => $slug,
+            'episode' => $ep,
+            'progress' => $prog,
+            'duration' => $dur,
+            'formatted' => sprintf('%02d:%02d', (int)floor($prog / 60), $prog % 60),
+            'should_resume' => $shouldResume,
+        ],
+    ];
 });
 
 $router->add('POST', '/api/progress', function() use ($getJsonBody) {
@@ -259,6 +275,17 @@ $router->add('GET', '/api/anime/{slug}/detail', function(array $params) {
     return ['success' => true, 'data' => $detail];
 });
 
+$router->add('GET', '/api/schedule', function() {
+    $safeMode = (int)($_GET['safe_mode'] ?? 1);
+    $seasonal = Anilist::seasonal('airing', 1, 30, $safeMode);
+    return ['success' => true, 'data' => $seasonal['items'] ?? []];
+});
+
+$router->add('GET', '/api/anime/{slug}/relations', function(array $params) {
+    $slug = $params['slug'] ?? '';
+    return ['success' => true, 'data' => []];
+});
+
 // --- Stream Resolution Routes (HiAnime) ---
 $router->add('GET', '/api/anime/{slug}/episodes', function(array $params) {
     $slug = $params['slug'] ?? '';
@@ -337,6 +364,27 @@ $router->add('GET', '/api/player/sub', function() {
     header('Cache-Control: public, max-age=86400');
     echo $vtt;
     exit;
+});
+
+$router->add('POST', '/api/player/sub_chunk', function() use ($getJsonBody) {
+    $body = $getJsonBody();
+    $cues = $body['cues'] ?? [];
+    $target = (string)($body['target'] ?? ($body['lang'] ?? 'id'));
+    $translated = [];
+    foreach ($cues as $c) {
+        $text = (string)($c['text'] ?? '');
+        $trText = Translate::translateText($text, $target);
+        $translated[] = [
+            'start' => $c['start'] ?? 0,
+            'end' => $c['end'] ?? 0,
+            'text' => $trText,
+        ];
+    }
+    return ['success' => true, 'data' => $translated, 'cues' => $translated];
+});
+
+$router->add('POST', '/api/player/sub_cache_save', function() {
+    return ['success' => true, 'data' => true];
 });
 
 // --- Low-Memory Streaming Video Proxy Route ---

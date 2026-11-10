@@ -5,9 +5,12 @@ function apiBase(){
     return "http://127.0.0.1:8767";
   }
   var p = location.pathname || "";
-  var dir = p.replace(/\/[^\/]*$/, "");
-  if(dir && dir !== "/" && dir !== "\\"){
-    return dir.replace(/\/+$/, "");
+  if(/\.[a-zA-Z0-9]+$/.test(p)){
+    p = p.replace(/\/[^\/]*$/, "");
+  }
+  p = p.replace(/\/+$/, "");
+  if(p && p !== "/" && p !== "\\"){
+    return p;
   }
   return "";
 }

@@ -43,7 +43,7 @@ class Hianime
 
         // Strip PKCS7 padding
         $pad = ord(substr($pt, -1));
-        if ($pad >= 1 && $pad <= 16) {
+        if ($pad >= 1 && $pad <= 16 && substr($pt, -$pad) === str_repeat(chr($pad), $pad)) {
             $pt = substr($pt, 0, -$pad);
         }
 

@@ -22,6 +22,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERSION_FILE = os.path.join(ROOT_DIR, "VERSION")
 BACKEND_VER_FILE = os.path.join(ROOT_DIR, "backend", "version.py")
 ANDROID_VER_FILE = os.path.join(ROOT_DIR, "android", "app", "src", "main", "python", "backend", "version.py")
+PHP_CONFIG_FILE = os.path.join(ROOT_DIR, "php", "config.php")
 WINRES_FILE = os.path.join(ROOT_DIR, "launcher", "winres", "winres.json")
 MANIFEST_FILE = os.path.join(ROOT_DIR, "launcher", "winres", "tatap.manifest")
 FRONTEND_HTML = os.path.join(ROOT_DIR, "frontend", "index.html")
@@ -123,6 +124,15 @@ def apply_version(new_version: str, sync_readme: bool = False):
             f.write(ver_py_content)
         print(f" ✓ {os.path.relpath(p, ROOT_DIR)} -> __version__ = \"{new_version}\"")
 
+    # 2b. php/config.php
+    if os.path.exists(PHP_CONFIG_FILE):
+        with open(PHP_CONFIG_FILE, "r", encoding="utf-8") as f:
+            c = f.read()
+        new_c = re.sub(r"public\s+const\s+VERSION\s*=\s*'[^']+';", f"public const VERSION = '{new_version}';", c)
+        with open(PHP_CONFIG_FILE, "w", encoding="utf-8") as f:
+            f.write(new_c)
+        print(f" ✓ {os.path.relpath(PHP_CONFIG_FILE, ROOT_DIR)} -> VERSION = '{new_version}'")
+
     # 3. launcher/winres/winres.json
     def repl_winres(content: str) -> str:
         content = re.sub(r'"file_version":\s*"[^"]+"', f'"file_version": "{win_version}"', content)
@@ -191,6 +201,16 @@ def check_consistency():
                 errors.append(f"android backend version.py ({m.group(1) if m else 'N/A'}) tidak cocok dengan VERSION ({curr})")
             else:
                 print(f" ✓ android/app/.../backend/version.py: '{m.group(1)}'")
+
+    # php/config.php
+    if os.path.exists(PHP_CONFIG_FILE):
+        with open(PHP_CONFIG_FILE, "r", encoding="utf-8") as f:
+            c = f.read()
+            m = re.search(r"public\s+const\s+VERSION\s*=\s*'([^']+)';", c)
+            if not m or m.group(1) != curr:
+                errors.append(f"php/config.php ({m.group(1) if m else 'N/A'}) tidak cocok dengan VERSION ({curr})")
+            else:
+                print(f" ✓ php/config.php: '{m.group(1)}'")
 
     # launcher winres.json
     win_exp = f"{curr}.0"

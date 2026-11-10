@@ -3185,7 +3185,8 @@ function prefetchSubtitleTrack(url, ref, langCode){
     if(seasonNum) qs += "&season=" + encodeURIComponent(seasonNum);
     if(altTitle) qs += "&alt_title=" + encodeURIComponent(altTitle);
   }
-  var prox = "/api/player/sub?" + qs;
+  var base = (typeof apiBase === "function" ? apiBase() : "");
+  var prox = base + "/api/player/sub?" + qs;
 
   // Cek apakah promise untuk URL yang sama sudah berjalan
   if(cur._subPrefetch && cur._subPrefetch.prox === prox){
@@ -3256,7 +3257,8 @@ function startProgressiveChunkTranslate(sourceUrl, originalTrackUrl, mode, token
   var checkQs = "url=" + encodeURIComponent(sourceUrl) + "&referer=" + encodeURIComponent(ref) +
                 "&lang=id&mode=" + encodeURIComponent(mode) + "&check_cache=true";
 
-  fetch("/api/player/sub?" + checkQs).then(function(r){
+  var b = (typeof apiBase === "function" ? apiBase() : "");
+  fetch(b + "/api/player/sub?" + checkQs).then(function(r){
     if(r.ok){
       return r.text().then(function(t){
         var tier = r.headers.get("X-Translate-Tier") || "cached";
@@ -3277,7 +3279,8 @@ function startProgressiveChunkTranslate(sourceUrl, originalTrackUrl, mode, token
 
     // 2. Cache Miss: Ambil teks sumber asli (English)
     var rawQs = "url=" + encodeURIComponent(sourceUrl) + "&referer=" + encodeURIComponent(ref) + "&lang=en&src=en";
-    fetch("/api/player/sub?" + rawQs).then(function(r){
+    var b = (typeof apiBase === "function" ? apiBase() : "");
+    fetch(b + "/api/player/sub?" + rawQs).then(function(r){
       if(!r.ok) throw new Error("Gagal mengunduh subtitle sumber (HTTP " + r.status + ")");
       return r.text();
     }).then(function(rawVttText){
@@ -3330,7 +3333,8 @@ function startProgressiveChunkTranslate(sourceUrl, originalTrackUrl, mode, token
         if(chunkState.completedCount >= chunks.length){
           var fullVtt = generateVttWithOffset(cur.cues, 0);
           syncNativeTextTrack(fullVtt, cur.cues, "id");
-          fetch("/api/player/sub_cache_save", {
+          var b = (typeof apiBase === "function" ? apiBase() : "");
+          fetch(b + "/api/player/sub_cache_save", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -3373,7 +3377,8 @@ function startProgressiveChunkTranslate(sourceUrl, originalTrackUrl, mode, token
               return {start: c.start, end: c.end, text: c.origPlain || c.plain};
             });
 
-            fetch("/api/player/sub_chunk", {
+            var b = (typeof apiBase === "function" ? apiBase() : "");
+            fetch(b + "/api/player/sub_chunk", {
               method: "POST",
               headers: {"Content-Type": "application/json"},
               body: JSON.stringify({
@@ -3587,7 +3592,8 @@ function switchSubtitleTrack(url, langCode){
             cur._subUpgradeTimer = setTimeout(function(){
               if(cur.playToken !== token) return;
               var qs = "url=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(ref || "") + "&lang=id";
-              fetch("/api/player/sub?" + qs).then(function(ur){
+              var b = (typeof apiBase === "function" ? apiBase() : "");
+              fetch(b + "/api/player/sub?" + qs).then(function(ur){
                 if(cur.playToken !== token) return;
                 var uTier = ur.headers.get("X-Translate-Tier") || "";
                 var uModel = ur.headers.get("X-Translate-Model") || "";

@@ -217,8 +217,9 @@ def main():
             print("[!] Error: --deploy-ftp requires --ftp-host, --ftp-user, and --ftp-pass.", file=sys.stderr)
             sys.exit(1)
 
+        source_target = zip_path if args.upload_zip_only else args.staging_dir
         success = deploy_ftp(
-            source_dir_or_zip=args.staging_dir,
+            source_dir_or_zip=source_target,
             host=args.ftp_host,
             user=args.ftp_user,
             password=args.ftp_pass,

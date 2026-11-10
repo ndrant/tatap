@@ -31,7 +31,7 @@ class Cache
             return null;
         }
 
-        $data = @unserialize($content);
+        $data = @unserialize($content, ['allowed_classes' => false]);
         return ($data !== false) ? $data : null;
     }
 

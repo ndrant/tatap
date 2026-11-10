@@ -9,20 +9,26 @@ class Session
 
     public static function getVisitorToken(): string
     {
-        if (self::$token !== null) {
+        if (self::$token !== null && strlen(self::$token) >= 8) {
             return self::$token;
         }
 
         // 1. Check custom header
         if (!empty($_SERVER['HTTP_X_VISITOR_TOKEN'])) {
-            self::$token = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_SERVER['HTTP_X_VISITOR_TOKEN']);
-            return self::$token;
+            $t = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_SERVER['HTTP_X_VISITOR_TOKEN']);
+            if ($t !== '' && strlen($t) >= 8) {
+                self::$token = $t;
+                return self::$token;
+            }
         }
 
         // 2. Check cookie
         if (!empty($_COOKIE['tatap_token'])) {
-            self::$token = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_COOKIE['tatap_token']);
-            return self::$token;
+            $t = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$_COOKIE['tatap_token']);
+            if ($t !== '' && strlen($t) >= 8) {
+                self::$token = $t;
+                return self::$token;
+            }
         }
 
         // 3. Generate new 32-character token
@@ -31,7 +37,7 @@ class Session
             setcookie('tatap_token', self::$token, [
                 'expires' => time() + (365 * 24 * 3600),
                 'path' => '/',
-                'httponly' => false, // allow frontend JS to also read it if needed
+                'httponly' => false,
                 'samesite' => 'Lax',
             ]);
         }

@@ -347,7 +347,29 @@ assert_true(strpos($rewrittenM3u8, '720p.m3u8') !== false, 'M3U8 rewriter contai
 assert_true(strpos($rewrittenM3u8, 'referer=') !== false, 'M3U8 rewriter attaches referer parameter');
 
 echo "\nTask 7 Tests Passed Successfully!\n";
+
+// --- Fix Pass Review Tests ---
+echo "\nTesting Code Review Fixes...\n";
+
+// 1. Session token with invalid/empty characters must generate valid random token
+$_SERVER['HTTP_X_VISITOR_TOKEN'] = '   ';
+Session::setVisitorToken(''); // reset
+$sanitizedToken = Session::getVisitorToken();
+assert_true(strlen($sanitizedToken) >= 8, 'Session generates secure token when header is whitespace');
+assert_true($sanitizedToken !== '', 'Sanitized token is never empty string');
+
+$_SERVER['HTTP_X_VISITOR_TOKEN'] = '%%$$##';
+Session::setVisitorToken(''); // reset
+$sanitizedToken2 = Session::getVisitorToken();
+assert_true(strlen($sanitizedToken2) >= 8, 'Session generates secure token when header has only invalid chars');
+unset($_SERVER['HTTP_X_VISITOR_TOKEN']);
+
+// 2. SSRF DNS Rebinding & Localhost Alias Guard
+assert_equals(false, VideoProxy::isAllowedUrl('http://127.0.0.1.nip.io/stream.m3u8'), 'SSRF guard blocks domain resolving to 127.0.0.1');
+
+echo "\nAll Tests Passed Successfully!\n";
 echo "Total: $testCount, Passed: $passCount\n";
+
 
 
 

@@ -221,7 +221,7 @@ class Otakudesu
         }
 
         if (!$matched) {
-            $matched = $searchRes[0] ?? null;
+            return null;
         }
 
         if (!$matched) {
