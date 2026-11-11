@@ -20,6 +20,7 @@
 - [x] **E2E Lightpanda Modal & Tab Sweep**: Tested all navigation tabs, filter modals, help overlays, and AI fansub settings with 0 console warnings/errors.
 - [x] **Pytest Environment Configuration**: Installed pytest in `./venv/bin/pytest` and verified `tests/test_semver.py` (5/5 PASS).
 - [x] **Regression & Staging Sync**: Expanded test suite to 84 assertions in `php tests/test_php_backend.php` (all PASS) and synced distribution via `python3 tools/build_php_web.py`.
+- [x] **Mobile Adaptive Layout & Thumb-Zone Ergonomics (Pure Native CSS Zero-Build)**: Implemented responsive mobile layout (< 768px) with Bottom Navigation Bar (5 tabs), Spotlight mobile search button in header, vertical reflow on Anime Detail Page, Sticky Top Video Player in portrait with in-player episode switcher (`#pm-mobile-panel`), Mobile Bottom Sheet modals, and fluid 2-column card grid on small phones without any npm/Tailwind dependencies.
 
 ## Pending Tasks
 - [ ] **P4 — Directive Adherence**: Adhere strictly to Directive 8 (No version bump while v2.12.7 is in draft) and Directive 9 (Zero desktop/Android binary build during web iterations).

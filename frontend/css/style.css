@@ -144,6 +144,9 @@ body.no-crt #crt{display:none}
 @media (min-width:769px) and (max-width:1024px){.nav-tab-btn{border-radius:7px;padding:0 10px;font-size:11.5px}}
 
 .head-actions{justify-self:end;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.header-search-btn{width:38px;height:38px;padding:0;border-radius:10px;display:none;align-items:center;justify-content:center;background:rgba(18,21,28,0.85);border:1px solid rgba(255,255,255,0.08);color:var(--text);cursor:pointer;font-size:14px;transition:all .15s cubic-bezier(0.16,1,0.3,1);line-height:1;outline:0;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.header-search-btn:hover{border-color:rgba(56,189,248,0.5);color:var(--accent);background:var(--surface-hover);transform:translateY(-0.5px);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.header-search-btn:focus-visible{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
 .header-drawer-btn{width:38px;height:38px;padding:0;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:rgba(18,21,28,0.85);border:1px solid rgba(255,255,255,0.08);color:var(--text);cursor:pointer;font-size:14px;transition:all .15s cubic-bezier(0.16,1,0.3,1);line-height:1;outline:0;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
 .header-drawer-btn:hover{border-color:rgba(56,189,248,0.5);color:var(--accent);background:var(--surface-hover);transform:translateY(-0.5px);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 .header-drawer-btn:focus-visible{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
@@ -1131,7 +1134,9 @@ body.kb-nav .poster-card:hover:not(.sel):not(.tv-focus):not(:focus-visible) .pos
 .season-chip.special .season-badge-tag{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)}
 .season-chip.active{background:var(--accent);color:#000000;border-color:var(--accent);font-weight:700}
 /* DEDICATED ANIME DETAIL PAGE (COMPACT SCREEN-FIT & COVER BACKDROP) */
-body.in-detail-view{overflow:hidden !important;height:100vh !important;max-height:100vh !important}
+@media (min-width: 900px){
+  body.in-detail-view{overflow:hidden !important;height:100vh !important;max-height:100vh !important}
+}
 body.in-detail-view .bottom-bar{display:none !important}
 
 .detail-page{position:relative;width:100%;box-sizing:border-box;z-index:2}
@@ -4406,6 +4411,533 @@ body.spotlight-open {
   border-color: #ffffff;
   transform: scale(1.22);
   box-shadow: 0 0 10px var(--dot-color);
+}
+
+/* ==========================================================================
+   MOBILE ADAPTIVE LAYOUT & THUMB-ZONE ARCHITECTURE (< 768px)
+   Pure Native CSS — Zero-Build, Zero-Bloat
+   ========================================================================== */
+
+/* 1. Global Viewport & Safe-Area Bounds */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+  }
+  main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+    padding-left: clamp(10px, 3.2vw, 16px) !important;
+    padding-right: clamp(10px, 3.2vw, 16px) !important;
+    padding-top: clamp(12px, 2.5vw, 20px) !important;
+  }
+  .bottom-bar {
+    display: none !important;
+  }
+  .header-search-btn {
+    display: inline-flex !important;
+  }
+  .statusbar {
+    display: none !important;
+  }
+  .app-sidebar {
+    display: none !important;
+  }
+  .tui-head {
+    height: 52px !important;
+    padding: 0 clamp(10px, 3vw, 16px) !important;
+  }
+}
+
+/* 2. Ergonomic Bottom Navigation Bar (< 768px) */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: calc(56px + env(safe-area-inset-bottom)) !important;
+    padding: 0 6px env(safe-area-inset-bottom) 6px !important;
+    background: rgba(13, 17, 26, 0.94) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    z-index: 990 !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-tab-btn {
+    flex: 1 1 0 !important;
+    height: 52px !important;
+    min-height: 48px !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 2px 0 !important;
+    transition: color 150ms ease, transform 150ms var(--ease-spring) !important;
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    outline: none !important;
+  }
+
+  .mobile-tab-btn .mob-tab-icon {
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+    transition: transform 150ms var(--ease-spring), color 150ms ease !important;
+  }
+
+  .mobile-tab-btn .mob-tab-label {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1 !important;
+  }
+
+  .mobile-tab-btn:hover {
+    color: #ffffff !important;
+  }
+
+  .mobile-tab-btn:active {
+    transform: scale(0.92) !important;
+  }
+
+  .mobile-tab-btn.active {
+    color: var(--accent) !important;
+    font-weight: 700 !important;
+  }
+
+  .mobile-tab-btn.active .mob-tab-icon {
+    color: var(--accent) !important;
+    transform: translateY(-1px) scale(1.08) !important;
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5)) !important;
+  }
+
+  body.in-player .mobile-bottom-nav,
+  #player-modal:not(.hidden) ~ .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* 3. Fluid Responsive Poster Card Grid */
+@media (max-width: 480px) {
+  .poster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 6px 0 20px 0 !important;
+  }
+  .poster-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+  }
+  .poster-cover-wrap {
+    aspect-ratio: 2 / 3 !important;
+    width: 100% !important;
+    border-radius: 8px !important;
+  }
+  .poster-body b {
+    font-size: 12px !important;
+    height: 2.6em !important;
+    line-height: 1.3 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .poster-meta {
+    font-size: 10px !important;
+  }
+  .lane-card {
+    min-width: 120px !important;
+    max-width: 130px !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .poster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 12px !important;
+  }
+}
+
+/* 4. Anime Detail Page Vertical Reflow (< 768px) */
+@media (max-width: 768px) {
+  body.in-detail-view {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  body.in-detail-view main {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 8px 10px calc(80px + env(safe-area-inset-bottom)) 10px !important;
+  }
+  .detail-page {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .detail-stage-wrap {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .detail-top-nav {
+    height: 44px !important;
+    padding: 0 10px !important;
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+  }
+  .detail-btn-back {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+  }
+  .detail-compact-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .detail-info-panel,
+  .detail-episodes-section {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+  }
+  .detail-summary-header {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  .detail-poster-column {
+    width: 90px !important;
+    min-width: 90px !important;
+    flex: 0 0 90px !important;
+  }
+  .detail-poster-card {
+    border-radius: 8px !important;
+    aspect-ratio: 2 / 3 !important;
+  }
+  .detail-main-title {
+    font-size: 16.5px !important;
+    line-height: 1.25 !important;
+  }
+  .detail-sub-title {
+    font-size: 11.5px !important;
+  }
+  .detail-hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin: 12px 0 10px 0 !important;
+  }
+  .btn-quick-play {
+    grid-column: 1 / -1 !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    font-size: 14px !important;
+    border-radius: 9px !important;
+  }
+  .tm-bookmark-btn,
+  .tm-source-badge {
+    height: 42px !important;
+    min-height: 42px !important;
+    font-size: 11.5px !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+  }
+  .detail-info-scrollable {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .detail-episodes-section {
+    margin-top: 2px !important;
+  }
+  .detail-episodes-head {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .detail-episodes-controls {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .detail-ep-grid {
+    max-height: none !important;
+    overflow: visible !important;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .ep {
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 12.5px !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* 5. Sticky Top Player & Portrait Mobile Episode Sheet (< 768px) */
+.pm-mobile-panel {
+  display: none;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  #player-modal:not(.hidden) {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #080b12 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 1000 !important;
+  }
+  #player-modal .player-shell {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  #player-modal .ambient-stage {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    width: 100vw !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    max-height: 42vh !important;
+    flex: 0 0 auto !important;
+    background: #000000 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7) !important;
+  }
+  #player-modal #artplayer-container,
+  #player-modal .artplayer-app {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  #player-modal .pm-mobile-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    padding: 14px 14px calc(24px + env(safe-area-inset-bottom)) 14px !important;
+    background: #080b12 !important;
+    box-sizing: border-box !important;
+  }
+  .pm-mob-meta-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  .pm-mob-title-wrap {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  .pm-mob-anime-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .pm-mob-ep-title {
+    font-size: 12px !important;
+    color: var(--accent) !important;
+    font-weight: 600 !important;
+    margin-top: 2px !important;
+  }
+  .pm-mob-quick-nav {
+    display: flex !important;
+    gap: 8px !important;
+    flex: 0 0 auto !important;
+  }
+  .pm-mob-nav-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .pm-mob-nav-btn:hover {
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+  .pm-mob-nav-btn:disabled {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+  }
+  .pm-mob-episodes-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .pm-mob-section-label {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+  }
+  .pm-mob-ep-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)) !important;
+    gap: 8px !important;
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-right: 2px !important;
+  }
+  .mob-ep-chip {
+    height: 42px !important;
+    min-height: 42px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    font-family: var(--font-mono) !important;
+  }
+  .mob-ep-chip:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  .mob-ep-chip.active {
+    background: var(--accent) !important;
+    color: #000000 !important;
+    border-color: var(--accent) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+  }
+}
+
+/* Landscape Mode on Phones: Pure Cinema Immersive */
+@media (orientation: landscape) and (max-height: 600px) {
+  #player-modal .pm-mobile-panel {
+    display: none !important;
+  }
+  #player-modal .ambient-stage {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+  }
+}
+
+/* 6. Mobile Bottom Sheet Modals (< 768px) */
+@media (max-width: 768px) {
+  .overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .overlay .sheet,
+  .overlay .filter-sheet,
+  .overlay .genre-sheet,
+  .overlay .settings-sheet,
+  .overlay .source-sheet,
+  .catalog-filter-card {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 85vh !important;
+    max-height: 85dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom)) 16px !important;
+    animation: sheetSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+  @keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .genre-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-height: 55vh !important;
+  }
+  .filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sheet-head h2 {
+    font-size: 15px !important;
+  }
+  .pager {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+  .pager-btn {
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+  }
 }
 
 

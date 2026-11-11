@@ -123,6 +123,9 @@ var Tui = (function () {
     document.querySelectorAll(".drawer-item[data-view]").forEach(function(item){
       item.classList.toggle("active", item.getAttribute("data-view") === v);
     });
+    document.querySelectorAll(".mobile-tab-btn[data-view]").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-view") === v);
+    });
   }
 
   var _genreList=null;

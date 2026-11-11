@@ -23,7 +23,14 @@
 
 ## 2. Recent Autonomous Self-Healing & Hardening
 
-1. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
+1. **Mobile Adaptive Layout & Thumb-Zone Ergonomics (Pure Native CSS Zero-Build):**
+   - **Thumb-Zone Bottom Navigation Bar (`#mobile-bottom-nav`):** Integrated 5 thumb-friendly tabs (*Katalog*, *Musim*, *Terbaru*, *Riwayat*, *Favorit*) with safe-area insets (`env(safe-area-inset-bottom)`), active glow indicators, and tactile audio feedback (`TatapSfx.play("tab")`) on viewports `< 768px`.
+   - **Responsive Header & Quick Search Button (`#btn-search-mobile`):** Added a one-tap mobile search icon in `.head-actions` that opens Spotlight search smoothly on touch screens.
+   - **Anime Detail Page Vertical Reflow (`#detail-page`):** Unlocked vertical scrolling on `body.in-detail-view` for viewports `< 768px`, allowing full scrollable view with ambient backdrop, 2:3 poster header, full-width quick action buttons (*Putar Sekarang*, *+ Favorit*, *Ganti Sumber*), expandable synopsis (*Selengkapnya ▼* / *Ringkas ▲*), and responsive episode grid with $\ge 44\text{px}$ touch targets.
+   - **Sticky Top Player & Portrait Episode Panel (`#pm-mobile-panel`):** Video player docks 16:9 at the top in portrait mode on mobile with episode selector and quick Prev/Next navigation below, expanding to 100vw x 100vh cinema mode on landscape or fullscreen.
+   - **Mobile Bottom Sheet Modals:** Modals (Catalog Filter, Genre Filter, Settings) reflow into smooth bottom sheets sliding up from the bottom with 20px top rounded corners.
+   - **Fluid 2-Column Poster Grid:** Formatted `.poster-grid` into a balanced 2-column layout on small phones (`< 480px`) with 2-line title clamps and clean 2:3 card aspect ratio.
+2. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
    - Added multi-page GraphQL `airingSchedules` range fetcher (`monMidUtc` to `sunEndUtc`) and 7-day Monday–Sunday grouping in `php/scrapers/Anilist.php` (`Anilist::schedule`).
    - Wired `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic, day-specific anime airing buckets with `day`, `weekday`, `day_name`, `current_day`, `is_today`, and `counts`.
    - Verified live in Lightpanda: clicking Senin (7 items), Selasa (11 items, is-today), Sabtu (27 items), Minggu (32 items) dynamically re-renders results title and cards in real time with 0 console errors.

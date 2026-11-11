@@ -10,7 +10,15 @@
 
 ## 1. Current Implementation Progress & Completed Tasks
 
-1. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
+1. **Mobile Adaptive Layout & Thumb-Zone Architecture (Incident / Feature Complete):**
+   - Implemented Pure Native CSS adaptive architecture without adding Tailwind or npm build pipelines (Ponytail Ultra compliant).
+   - Added Semantic Thumb-Zone Bottom Navigation Bar (`#mobile-bottom-nav`) with 5 primary tabs (*Katalog*, *Musim*, *Terbaru*, *Riwayat*, *Favorit*), safe-area insets (`env(safe-area-inset-bottom)`), active glow indicators, and tactile audio feedback (`TatapSfx.play("tab")`).
+   - Added Mobile Spotlight Search trigger button (`#btn-search-mobile`) to `.head-actions` in `.tui-head` for fast one-handed search access on touch screens.
+   - Reflowed Anime Detail Page (`#detail-page`): Unlocked vertical scrolling on `body.in-detail-view` for `< 768px`, allowing full scrollable view with ambient backdrop, 2:3 poster header, full-width quick action buttons (*Putar Sekarang*, *+ Favorit*, *Ganti Sumber*), expandable synopsis (*Selengkapnya ▼* / *Ringkas ▲*), and responsive episode grid with $\ge 44\text{px}$ touch targets.
+   - Designed Sticky Top Player for mobile portrait: 16:9 player pinned at the top with dedicated in-player episode navigation drawer (`#pm-mobile-panel`), switching automatically to 100vw x 100vh immersive cinema mode when rotated to landscape or when fullscreen is triggered.
+   - Converted Catalog Filter, Genre Filter, and Settings Modals into mobile Bottom Sheets sliding up from the bottom with 20px top rounded corners.
+   - Formatted `.poster-grid` into a balanced 2-column layout on phones `< 480px` with 2-line title clamps and clean 2:3 card aspect ratio.
+2. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
    - Added `Anilist::schedule($day, $safeMode)` to `php/scrapers/Anilist.php` implementing multi-page AniList GraphQL `airingSchedules` range queries (Monday 00:00 WIB to Sunday 23:59 WIB).
    - Grouped schedules into Monday through Sunday day buckets with time (`%H:%M WIB`), date, episode, and slug mapping.
    - Connected `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic items by requested day.

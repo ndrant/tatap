@@ -1774,6 +1774,11 @@ function openPlayer(ep, resumeTime, forceRefresh){
   }
   $("pm-title").textContent=cur.title;
   $("pm-meta").textContent="ep "+ep+" · "+cur.mode.toUpperCase();
+  var mobAnimeTitle = $("pm-mob-anime-title");
+  if(mobAnimeTitle) mobAnimeTitle.textContent = cur.title || "";
+  var mobEpTitle = $("pm-mob-ep-title");
+  if(mobEpTitle) mobEpTitle.textContent = "Episode " + ep + " · " + (cur.mode || "sub").toUpperCase();
+  renderMobilePlayerEpisodes();
   $("pm-spinner").classList.remove("hidden");
   $("pm-status").textContent=forceRefresh ? "memulihkan ep "+ep+" (failover)..." : "resolving ep "+ep+"...";
   updatePrevNext();
@@ -4998,6 +5003,30 @@ function switchQ(q){
   }
 }
 
+function renderMobilePlayerEpisodes(){
+  var grid = $("pm-mobile-ep-grid");
+  if(!grid) return;
+  if(!cur.eps || !cur.eps.length){
+    grid.innerHTML = "<span class='dim small'>Memuat daftar episode...</span>";
+    return;
+  }
+  var html = "";
+  for(var i = 0; i < cur.eps.length; i++){
+    var it = cur.eps[i];
+    var isAct = it.ep === cur.ep;
+    html += "<button type='button' class='mob-ep-chip" + (isAct ? " active" : "") + "' data-ep='" + it.ep + "'>" + it.ep + "</button>";
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll(".mob-ep-chip").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var targetEp = parseInt(btn.getAttribute("data-ep"), 10);
+      if(!isNaN(targetEp) && targetEp !== cur.ep){
+        openPlayer(targetEp, 0);
+      }
+    });
+  });
+}
+
 function updatePrevNext(){
   var idx=-1;
   for(var i=0;i<cur.eps.length;i++)if(cur.eps[i].ep===cur.ep)idx=i;
@@ -5005,6 +5034,16 @@ function updatePrevNext(){
   var hasNext = idx >= 0 && idx < cur.eps.length - 1;
   var btnP = $("pm-prev"); if(btnP) btnP.disabled = !hasPrev;
   var btnN = $("pm-next"); if(btnN) btnN.disabled = !hasNext;
+  var btnMobP = $("pm-mob-prev"); if(btnMobP) btnMobP.disabled = !hasPrev;
+  var btnMobN = $("pm-mob-next"); if(btnMobN) btnMobN.disabled = !hasNext;
+  var epTitleMob = $("pm-mob-ep-title");
+  if(epTitleMob) epTitleMob.textContent = "Episode " + cur.ep + " · " + (cur.mode || "sub").toUpperCase();
+  var epGridMob = $("pm-mobile-ep-grid");
+  if(epGridMob){
+    epGridMob.querySelectorAll(".mob-ep-chip").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-ep") == cur.ep);
+    });
+  }
   if(window.art && window.art.controls){
     try{
       var pBtn = window.art.controls["prev-btn"];
@@ -7192,6 +7231,10 @@ function init(){
   });
   $("pm-prev").addEventListener("click",function(){stepEp(-1);});
   $("pm-next").addEventListener("click",function(){stepEp(1);});
+  var mobP = $("pm-mob-prev");
+  if(mobP) mobP.addEventListener("click",function(){stepEp(-1);});
+  var mobN = $("pm-mob-next");
+  if(mobN) mobN.addEventListener("click",function(){stepEp(1);});
   $("pm-mpv").addEventListener("click",playMPV);
   var qSel=$("pm-quality-select");
   if(qSel){
@@ -7332,8 +7375,8 @@ function init(){
     });
   });
 
-  // Navigasi tab bar Shiru di Header Atas
-  document.querySelectorAll(".nav-tab-btn[data-view]").forEach(function(b){
+  // Navigasi tab bar Shiru di Header Atas & Mobile Bottom Nav Bar
+  document.querySelectorAll(".nav-tab-btn[data-view], .mobile-tab-btn[data-view]").forEach(function(b){
     b.addEventListener("click", function(){
       var v = b.getAttribute("data-view");
       if(window.Tui && window.Tui.setView){
@@ -7341,6 +7384,22 @@ function init(){
       }
     });
   });
+
+  // Tombol Cari Mobile di Header
+  var mobSearchBtn = $("btn-search-mobile");
+  if(mobSearchBtn){
+    mobSearchBtn.addEventListener("click", function(e){
+      e.preventDefault();
+      if(window.SpotlightSearch && window.SpotlightSearch.open){
+        window.SpotlightSearch.open();
+      } else {
+        var sp = $("spotlight-modal");
+        if(sp) sp.classList.remove("hidden");
+        var cmd = $("cmd");
+        if(cmd){ cmd.removeAttribute("readonly"); cmd.focus(); }
+      }
+    });
+  }
 
   // Interaktivitas Brand Logo Header (kembali ke Musim Ini)
   var headBrand = $("head-brand");
@@ -7632,7 +7691,7 @@ function init(){
     if(window.TatapSfx && window.TatapSfx.isPlayerActive && window.TatapSfx.isPlayerActive()) return;
     var target = e.target;
     if(!target) return;
-    var el = target.closest(".poster-card, .nav-tab-btn, .popover-item, .drawer-item, .seg button, .ep, .pager-btn, .header-drawer-btn, .ep-range-chip");
+    var el = target.closest(".poster-card, .nav-tab-btn, .mobile-tab-btn, .popover-item, .drawer-item, .seg button, .ep, .mob-ep-chip, .pager-btn, .header-drawer-btn, .header-search-btn, .ep-range-chip, .pm-mob-nav-btn");
     if(el && window.TatapSfx){
       TatapSfx.play("tick");
     }

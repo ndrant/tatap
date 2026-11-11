@@ -444,6 +444,9 @@
     <button class="nav-tab-btn" data-view="favorit" id="tab-nav-favorit" tabindex="0">Favorit</button>
   </nav>
   <div class="head-actions">
+    <button id="btn-search-mobile" class="icon-btn header-search-btn" title="Pencarian Anime (⌘K / /)" aria-label="Cari" tabindex="0">
+      <svg class="ui-icon"><use href="#icon-search"/></svg>
+    </button>
     <button id="btn-drawer-head" class="icon-btn header-drawer-btn" title="Pengaturan &amp; Menu" aria-label="Pengaturan" tabindex="0">
       <span class="drawer-btn-icon"><svg class="ui-icon"><use href="#icon-gear"/></svg></span>
     </button>
@@ -1272,6 +1275,30 @@
     </div>
   </div>
 </footer>
+
+<!-- MOBILE BOTTOM NAVIGATION BAR (< 768px, Thumb-Zone Ergonomic) -->
+<nav id="mobile-bottom-nav" class="mobile-bottom-nav" role="navigation" aria-label="Navigasi Mobile">
+  <button type="button" class="mobile-tab-btn active" data-view="katalog" id="mob-tab-katalog" aria-label="Katalog Anime">
+    <svg class="ui-icon mob-tab-icon"><use href="#icon-catalog"/></svg>
+    <span class="mob-tab-label">Katalog</span>
+  </button>
+  <button type="button" class="mobile-tab-btn" data-view="musim" id="mob-tab-musim" aria-label="Anime Musim Ini">
+    <svg class="ui-icon mob-tab-icon"><use href="#icon-season"/></svg>
+    <span class="mob-tab-label">Musim</span>
+  </button>
+  <button type="button" class="mobile-tab-btn" data-view="terbaru" id="mob-tab-terbaru" aria-label="Episode Terbaru">
+    <svg class="ui-icon mob-tab-icon"><use href="#icon-zap"/></svg>
+    <span class="mob-tab-label">Terbaru</span>
+  </button>
+  <button type="button" class="mobile-tab-btn" data-view="riwayat" id="mob-tab-riwayat" aria-label="Riwayat Tontonan">
+    <svg class="ui-icon mob-tab-icon"><use href="#icon-clock"/></svg>
+    <span class="mob-tab-label">Riwayat</span>
+  </button>
+  <button type="button" class="mobile-tab-btn" data-view="favorit" id="mob-tab-favorit" aria-label="Daftar Favorit">
+    <svg class="ui-icon mob-tab-icon"><use href="#icon-star-filled"/></svg>
+    <span class="mob-tab-label">Favorit</span>
+  </button>
+</nav>
   </div> <!-- /.app-main-layout -->
 </div> <!-- /.app-shell -->
 
@@ -1396,6 +1423,28 @@
       <button id="pm-next" title="Episode berikutnya (n)">NEXT <svg class="ui-icon"><use href="#icon-step-next"/></svg></button>
     </div>
     <div class="player-hint dim small">Space play/pause · ←/→ seek 5 dtk · , / . sinkronisasi sub · f fullscreen · [ / ] kecepatan · n/p ganti episode · m mute · Esc tutup</div>
+
+    <!-- MOBILE IN-PLAYER INFO & EPISODES PANEL (< 768px portrait) -->
+    <div id="pm-mobile-panel" class="pm-mobile-panel">
+      <div class="pm-mob-meta-bar">
+        <div class="pm-mob-title-wrap">
+          <div id="pm-mob-anime-title" class="pm-mob-anime-title">–</div>
+          <div id="pm-mob-ep-title" class="pm-mob-ep-title">–</div>
+        </div>
+        <div class="pm-mob-quick-nav">
+          <button type="button" id="pm-mob-prev" class="pm-mob-nav-btn" title="Episode Sebelumnya" aria-label="Sebelumnya">
+            <svg class="ui-icon"><use href="#icon-step-prev"/></svg>
+          </button>
+          <button type="button" id="pm-mob-next" class="pm-mob-nav-btn" title="Episode Berikutnya" aria-label="Berikutnya">
+            <svg class="ui-icon"><use href="#icon-step-next"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="pm-mob-episodes-wrap">
+        <div class="pm-mob-section-label">DAFTAR EPISODE</div>
+        <div id="pm-mobile-ep-grid" class="pm-mob-ep-grid"></div>
+      </div>
+    </div>
   </div>
 </div>
 
