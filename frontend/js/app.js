@@ -541,6 +541,9 @@ var TvNavigationManager = (function(){
     var shell = document.querySelector(".player-shell");
     if(stage) stage.classList.remove("idle");
     if(shell) shell.classList.remove("idle");
+    if(window.art && window.art.controls){
+      window.art.controls.show = true;
+    }
     playerState = PLAYER_HUD_ACTIVE;
     resetHudTimer();
     if(focusTarget){
@@ -3839,6 +3842,12 @@ var TouchGestures = {
       } else {
         self.lastTap = now;
         self.lastTapX = self.startX;
+        if(window.art && window.art.controls){
+          window.art.controls.show = !window.art.controls.show;
+          if(window.art.controls.show && typeof TvNavigationManager !== "undefined"){
+            TvNavigationManager.showPlayerControls();
+          }
+        }
       }
     }, {passive: true});
   }
@@ -3915,6 +3924,8 @@ function playUrl(url,referrer,sub,subRef,resumeTime,token){
   var artContainer = $("artplayer-container");
   if(typeof Artplayer !== "undefined" && artContainer){
     Artplayer.FULLSCREEN_WEB_IN_BODY = false;
+    Artplayer.CONTROL_HIDE_TIME = 4500;
+    Artplayer.MOBILE_CLICK_PLAY = false;
     if(window.art){
       try{
         if(window.art.fullscreenWeb) window.art.fullscreenWeb = false;
@@ -4602,6 +4613,13 @@ function playUrl(url,referrer,sub,subRef,resumeTime,token){
       var hdr = $("art-header-layer");
       if(hdr){
         hdr.style.opacity = show ? "1" : "0";
+        hdr.style.pointerEvents = show ? "auto" : "none";
+      }
+      var stage = document.querySelector(".ambient-stage");
+      var shell = document.querySelector(".player-shell");
+      if(show){
+        if(stage) stage.classList.remove("idle");
+        if(shell) shell.classList.remove("idle");
       }
     });
 

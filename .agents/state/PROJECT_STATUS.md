@@ -37,12 +37,15 @@
    - **Zero FOUC Startup:** Added synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
    - **Lightpanda MCP Live Verification:** Verified toggle back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
 
-3. **Adaptive 2-Tier Artplayer Controls Architecture (`.art-controls`):**
-   - **Full-Width Top Tier Seekbar on Small Screens ($\le 768\text{px}$ & `body.mobile-mode`):** Seekbar `.art-controls-center` dynamically expands to 100% full width (Row 1) with order `-1` / `1`, removing spatial competition with left/right buttons and giving users generous, pinpoint scrubbing.
-   - **100% Visible & Accessible Controls on Row 2:** Left side holds Play/Pause, Prev, Next, and Time; right side holds Quality, Subtitles, TR-ID, AI Fansub, Settings gear, PiP, Fullscreen, and Close.
-   - **Elimination of Horizontal Overflow & Clipping:** Desktop-only/redundant buttons (MPV, screenshot, web fullscreen, volume slider) cleanly suppressed on small touch screens, while essential controls adopt compact squircle shapes ($\ge 28\text{px}$ touch targets).
-   - **Pause Persistence & Smooth Visibility:** Controls guaranteed to stay visible and interactive when paused (`.art-paused`), sliding in smoothly on hover/tap.
-   - **Lightpanda MCP Live Verification:** Verified live in Lightpanda across desktop (1888px) and mobile (428px) viewports with all 8 action buttons and 4 nav controls visible, clickable, and contained with 0 console errors.
+3. **Responsive 3-Tier Mobile Player Controls Architecture & Playback Interactivity (`antislop-ui`):**
+   - **Tampilan 100% Seluruh Tombol Pemutar di Mode Mobile (Zero Suppression):** Completely removed `display: none !important;` on Volume (`.art-control-volume`), Screenshot (`.art-control-screenshot`), MPV (`.art-control-mpv-btn`), Web Fullscreen (`.art-control-fullscreenWeb`), and dividers (`.art-control-sep-1`, `.art-control-sep-2`). All 18 controls are fully visible, accessible, and interactive on mobile devices.
+   - **Arsitektur 3-Tier Terstruktur Tanpa Terpotong (Zero Overflow & Zero Clipping):**
+     - *Row 1:* 100% full-width Seekbar (`.art-controls-center`).
+     - *Row 2:* Left Playback Transport (`.art-controls-left`) with Prev, Play/Pause, Next, Volume (toggle mute/volume panel), and Time display (`00:00 / 23:45`).
+     - *Row 3:* Feature & Action Controls (`.art-controls-right`) with Resolution (Quality), Subtitles, TR-ID, AI Fansub, Screenshot, MPV, Settings, PiP, Web Fullscreen, Fullscreen, and Close.
+     - *Clean Dropdowns:* Closed dropdown lists (`.art-selector-list`) have `display: none !important;` so they never stretch horizontal scrollWidth, and pop up vertically with `max-height: 170px` when clicked/hovered without being clipped.
+   - **Interaktivitas Ketukan Tunggal Saat Memutar Video (`TouchGestures` & `TvNavigationManager`):** Single tap on the video stage reliably toggles controls visibility (`art.controls.show = true` and `TvNavigationManager.showPlayerControls()`). Set `Artplayer.CONTROL_HIDE_TIME = 4500ms` and `Artplayer.MOBILE_CLICK_PLAY = false` so controls stay open comfortably on mobile and tapping video does not accidentally pause playback.
+   - **Lightpanda MCP Live Verification:** Verified live in Lightpanda on `?mode=mobile`: all 5 left buttons, 13 right buttons, and seekbar rendered with `visibility: visible`, `width > 0`, 0 overflow, and smooth tap toggle during playback with 0 console errors.
 
 4. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
    - Added multi-page GraphQL `airingSchedules` range fetcher (`monMidUtc` to `sunEndUtc`) and 7-day Monday–Sunday grouping in `php/scrapers/Anilist.php` (`Anilist::schedule`).

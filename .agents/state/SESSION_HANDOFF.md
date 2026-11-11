@@ -25,13 +25,15 @@
    - Added zero-FOUC synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
    - Verified live in Lightpanda browser: toggling back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
 
-3. **Adaptive 2-Tier Artplayer Controls Architecture (`.art-controls`):**
-   - Redesigned `.art-controls` layout into an adaptive two-tier structure on narrow screens ($\le 768\text{px}$ and `body.mobile-mode`):
-     - Top Tier (Row 1): Seekbar `.art-controls-center` expands to 100% full width (`order: 1; flex: 1 0 100%`) across the entire video player, allowing generous and accurate duration scrubbing.
-     - Bottom Tier (Row 2): Left side hosts navigation controls (`.art-controls-left`: Play/Pause, Prev, Next, Time); right side hosts all essential action buttons (`.art-controls-right`: Quality, Subtitle, TR-ID, AI Fansub, Settings, PiP, Fullscreen, and Close).
-   - Suppressed redundant/desktop-only controls on mobile (MPV, screenshot, web fullscreen, volume slider) to eliminate horizontal blowout and guarantee 100% containment and visibility within the player boundary.
-   - Guaranteed pause persistence (`.art-paused`), smooth hover/tap transitions, and high-z-index (`z-index: 200`) selector dropdowns.
-   - Verified live in Lightpanda browser with 100% containment, all 8 action buttons and 4 nav controls visible and accessible.
+3. **Mobile Player Controls 3-Tier Architecture & Playback Interactivity (`antislop-ui` Complete):**
+   - Eliminated all button suppression (`display: none !important;` removed) on mobile for Volume (`.art-control-volume`), Screenshot (`.art-control-screenshot`), MPV (`.art-control-mpv-btn`), Web Fullscreen (`.art-control-fullscreenWeb`), and separators (`.art-control-sep-1`, `.art-control-sep-2`).
+   - Structured controls into a clean, zero-overflow 3-tier layout:
+     - Row 1: Seekbar (`.art-controls-center`, 100% full width).
+     - Row 2: Playback transport (`.art-controls-left`: Prev, Play/Pause, Next, Volume, Time 00:00 / 23:45).
+     - Row 3: Action features (`.art-controls-right`: Quality, Subtitles, TR-ID, AI, Screenshot, MPV, Settings, PiP, Web Fullscreen, Fullscreen, Close).
+   - Fixed playback interactivity: Single tap on video stage during playback reliably wakes up and toggles controls (`art.controls.show = true` and `TvNavigationManager.showPlayerControls()`). Set `Artplayer.CONTROL_HIDE_TIME = 4500ms` and `Artplayer.MOBILE_CLICK_PLAY = false` so controls stay open comfortably on mobile and tapping video does not accidentally pause playback.
+   - Cleaned up selector dropdown lists (`.art-selector-list`): Closed dropdowns are `display: none !important;` so they never stretch horizontal scrollWidth, and pop up vertically (`max-height: 170px`) when clicked without clipping.
+   - Verified live with Lightpanda: all 5 left buttons, all 13 right buttons, and seekbar rendered with proper dimensions, 0 overflow, and smooth tap toggle during playback with 0 console errors.
 
 4. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
    - Added `Anilist::schedule($day, $safeMode)` to `php/scrapers/Anilist.php` implementing multi-page AniList GraphQL `airingSchedules` range queries (Monday 00:00 WIB to Sunday 23:59 WIB).

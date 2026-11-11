@@ -18,6 +18,16 @@ Format versi menggunakan skema `MAJOR.MINOR.PATCH`:
 ### Justifikasi SemVer 2.0.0 (PATCH: 2.12.6 -> 2.12.7)
 Kenaikan digit PATCH diterapkan sesuai kaidah Semantic Versioning 2.0.0 dan Direktif #3 [`AGENTS.md`](AGENTS.md) untuk optimasi performa resolving stream anime dan pemutaran buffering video di platform Web dan Desktop (eliminasi jeda sinkron AniSkip, master m3u8 pre-seeding dari scraper, in-memory segment ring cache, predictive next-episode pre-resolving, dan HLS.js micro-gap auto-recovery) tanpa perombakan skema database maupun modifikasi antarmuka eksternal yang tidak kompatibel.
 
+### Fixed
+1. **Perbaikan Tuntas Bilah Kendali Pemutar Video Mobile & Interaktivitas Saat Play Video (`frontend/css/style.css`, `frontend/js/app.js`, `frontend/index.html`):**
+   - **Tampilan 100% Seluruh Tombol Pemutar di Mode Mobile (Zero Suppression):** Menghilangkan aturan `display: none !important;` pada tombol Volume (`.art-control-volume`), Screenshot (`.art-control-screenshot`), MPV Eksternal (`.art-control-mpv-btn`), Web Fullscreen (`.art-control-fullscreenWeb`), serta pemisah visual (`.art-control-sep-1`, `.art-control-sep-2`). Seluruh 18 kendali pemutar kini hadir, aktif, dan dapat diakses pengguna di layar HP/ponsel.
+   - **Arsitektur Layout Multi-Tier Responsif Mobile (`antislop-ui`):** Menata tata letak kontrol mobile menjadi 3 baris terstruktur:
+     - *Baris 1:* Seekbar penuh (`.art-controls-center`, 100% width) dengan scrubber presisi.
+     - *Baris 2 (Playback Transport):* Tombol Previous, Play/Pause, Next, Volume (toggle mute/slider popup), dan durasi waktu format mono `00:00 / 23:45`.
+     - *Baris 3 (Aksi & Fitur):* Pilihan Resolusi (Quality), Subtitle Track, TR-ID (Terjemahan Indonesia), AI Fansub, Screenshot, MPV, Pengaturan Pemutar (Settings), PiP, Web Fullscreen, Layar Penuh (Fullscreen), dan Tutup (Close).
+   - **Interaktivitas Ketukan Tunggal Saat Memutar Video (`TouchGestures` & `TvNavigationManager`):** Memperbaiki alur ketukan layar HP saat memutar video. Ketukan tunggal (*single tap*) pada area panggung video kini secara andal memunculkan kembali bilah kendali (`art.controls.show = true` dan `TvNavigationManager.showPlayerControls()`). Mengatur waktu sembunyi otomatis kendali (`Artplayer.CONTROL_HIDE_TIME = 4500ms`) agar cukup waktu bagi pengguna untuk menavigasi tombol di layar sentuh.
+   - **Pencegahan Terpotongnya Menu Dropdown Pemilih Subtitle & Kualitas (`.art-selector-list`):** Memperbaiki perilaku menu dropdown resolusi dan subtitle agar tersembunyi (`display: none`) saat tidak aktif sehingga tidak merusak ukuran kontainer kontrol, dan muncul melayang (*floating pop-up*) ke arah atas panggung video secara sempurna tanpa terpotong (*zero clipping*).
+
 ### Added
 1. **Layar Pemuatan Awal (Bootscreen Splash) untuk Linux AppImage & Windows Portable (`frontend/bootscreen.html`, `linux/AppRun`, `launcher/main.go`, `backend/main.py`, `android/app/src/main/python/backend/main.py`):**
    - **Antarmuka Bootscreen Instan Mandiri:** Menyediakan berkas `frontend/bootscreen.html` mandiri berbasis HTML/CSS/JS tanpa dependensi luar dengan palet cyber dark Tatap, animasi pulsing glow logo, progress sweep neon cyan, dan indikator status koneksi ke backend (`127.0.0.1:8767`).
@@ -592,6 +602,16 @@ Kenaikan digit PATCH diterapkan sesuai kaidah Semantic Versioning 2.0.0 dan Dire
 ### Justifikasi SemVer 2.0.0 (PATCH: 2.12.0 -> 2.12.1)
 Kenaikan digit PATCH diterapkan sesuai kaidah Semantic Versioning 2.0.0 dan Direktif #3 [`AGENTS.md`](AGENTS.md) karena rilis ini berfokus pada penyempurnaan visual & estetika antarmuka (**UI/UX Visual Polish**) pemutar video, penambahan integrasi sumber subtitle eksternal **OpenSubtitles Smart Merge**, serta perbaikan siklus hidup Picture-in-Picture (PiP) pada Android Mobile tanpa modifikasi skema database SQLite ataupun perubahan mendasar pada kontrak runtime eksternal.
 
+### Fixed
+1. **Perbaikan Tuntas Bilah Kendali Pemutar Video Mobile & Interaktivitas Saat Play Video (`frontend/css/style.css`, `frontend/js/app.js`, `frontend/index.html`):**
+   - **Tampilan 100% Seluruh Tombol Pemutar di Mode Mobile (Zero Suppression):** Menghilangkan aturan `display: none !important;` pada tombol Volume (`.art-control-volume`), Screenshot (`.art-control-screenshot`), MPV Eksternal (`.art-control-mpv-btn`), Web Fullscreen (`.art-control-fullscreenWeb`), serta pemisah visual (`.art-control-sep-1`, `.art-control-sep-2`). Seluruh 18 kendali pemutar kini hadir, aktif, dan dapat diakses pengguna di layar HP/ponsel.
+   - **Arsitektur Layout Multi-Tier Responsif Mobile (`antislop-ui`):** Menata tata letak kontrol mobile menjadi 3 baris terstruktur:
+     - *Baris 1:* Seekbar penuh (`.art-controls-center`, 100% width) dengan scrubber presisi.
+     - *Baris 2 (Playback Transport):* Tombol Previous, Play/Pause, Next, Volume (toggle mute/slider popup), dan durasi waktu format mono `00:00 / 23:45`.
+     - *Baris 3 (Aksi & Fitur):* Pilihan Resolusi (Quality), Subtitle Track, TR-ID (Terjemahan Indonesia), AI Fansub, Screenshot, MPV, Pengaturan Pemutar (Settings), PiP, Web Fullscreen, Layar Penuh (Fullscreen), dan Tutup (Close).
+   - **Interaktivitas Ketukan Tunggal Saat Memutar Video (`TouchGestures` & `TvNavigationManager`):** Memperbaiki alur ketukan layar HP saat memutar video. Ketukan tunggal (*single tap*) pada area panggung video kini secara andal memunculkan kembali bilah kendali (`art.controls.show = true` dan `TvNavigationManager.showPlayerControls()`). Mengatur waktu sembunyi otomatis kendali (`Artplayer.CONTROL_HIDE_TIME = 4500ms`) agar cukup waktu bagi pengguna untuk menavigasi tombol di layar sentuh.
+   - **Pencegahan Terpotongnya Menu Dropdown Pemilih Subtitle & Kualitas (`.art-selector-list`):** Memperbaiki perilaku menu dropdown resolusi dan subtitle agar tersembunyi (`display: none`) saat tidak aktif sehingga tidak merusak ukuran kontainer kontrol, dan muncul melayang (*floating pop-up*) ke arah atas panggung video secara sempurna tanpa terpotong (*zero clipping*).
+
 ### Added
 1. **Integrasi Provider AnimeTosho & Penyaringan Subtitle Bahasa Indonesia (`backend/api/animetosho.py`, `backend/main.py`):**
    - **Attachment Subtitle Anime Spesifik (AnimeTosho):** Mengambil attachment subtitle anime resmi (Crunchyroll, Netflix, Bstation, Muse) dan fansub (Judas, SubsPlease, Erai-raws, DKB) melalui AnimeTosho API (`feed.animetosho.net`) dengan dekompresi instan format XZ (`lzma.decompress`).
@@ -653,6 +673,16 @@ Kenaikan digit PATCH diterapkan sesuai kaidah Semantic Versioning 2.0.0 dan Dire
 
 ### Justifikasi SemVer 2.0.0 (MINOR: 2.11.6 -> 2.12.0)
 Kenaikan digit MINOR (dan reset digit PATCH ke `0`) diterapkan sesuai kaidah Semantic Versioning 2.0.0 serta Direktif #3 [`AGENTS.md`](AGENTS.md) karena rilis ini menghadirkan penambahan fitur dan pengayaan (*backward-compatible new features*) pada **Subtitle Engine Tatap (`GTX+`)** lintas seluruh platform (Web Desktop, Windows Portable, Linux AppImage, Android Mobile, dan Android TV), termasuk: dukungan format `.ass`/`.ssa` & pembersih tag ASS override, penggabungan cue simultan (*overlapping dialogue & sign cues*), mode **Dual-Subtitle Bilingual (`ID + EN`)**, kontrol **Sinkronisasi Waktu Subtitle (Offset `-` / `+` detik)**, **Sliding-Window Scene Context (±3 cues / ≤15s)**, **Stutter Preservation (`W-What?!` → `A-Apa?!`)**, serta pengayaan aturan slang/idiom Inggris, kultivasi/murim/donghua, honorifik Jepang, dan koreksi terjemahan harfiah (*calque fixes*) untuk membantu keterbacaan takarir Bahasa Indonesia yang lebih wajar dan nyaman dibaca.
+
+### Fixed
+1. **Perbaikan Tuntas Bilah Kendali Pemutar Video Mobile & Interaktivitas Saat Play Video (`frontend/css/style.css`, `frontend/js/app.js`, `frontend/index.html`):**
+   - **Tampilan 100% Seluruh Tombol Pemutar di Mode Mobile (Zero Suppression):** Menghilangkan aturan `display: none !important;` pada tombol Volume (`.art-control-volume`), Screenshot (`.art-control-screenshot`), MPV Eksternal (`.art-control-mpv-btn`), Web Fullscreen (`.art-control-fullscreenWeb`), serta pemisah visual (`.art-control-sep-1`, `.art-control-sep-2`). Seluruh 18 kendali pemutar kini hadir, aktif, dan dapat diakses pengguna di layar HP/ponsel.
+   - **Arsitektur Layout Multi-Tier Responsif Mobile (`antislop-ui`):** Menata tata letak kontrol mobile menjadi 3 baris terstruktur:
+     - *Baris 1:* Seekbar penuh (`.art-controls-center`, 100% width) dengan scrubber presisi.
+     - *Baris 2 (Playback Transport):* Tombol Previous, Play/Pause, Next, Volume (toggle mute/slider popup), dan durasi waktu format mono `00:00 / 23:45`.
+     - *Baris 3 (Aksi & Fitur):* Pilihan Resolusi (Quality), Subtitle Track, TR-ID (Terjemahan Indonesia), AI Fansub, Screenshot, MPV, Pengaturan Pemutar (Settings), PiP, Web Fullscreen, Layar Penuh (Fullscreen), dan Tutup (Close).
+   - **Interaktivitas Ketukan Tunggal Saat Memutar Video (`TouchGestures` & `TvNavigationManager`):** Memperbaiki alur ketukan layar HP saat memutar video. Ketukan tunggal (*single tap*) pada area panggung video kini secara andal memunculkan kembali bilah kendali (`art.controls.show = true` dan `TvNavigationManager.showPlayerControls()`). Mengatur waktu sembunyi otomatis kendali (`Artplayer.CONTROL_HIDE_TIME = 4500ms`) agar cukup waktu bagi pengguna untuk menavigasi tombol di layar sentuh.
+   - **Pencegahan Terpotongnya Menu Dropdown Pemilih Subtitle & Kualitas (`.art-selector-list`):** Memperbaiki perilaku menu dropdown resolusi dan subtitle agar tersembunyi (`display: none`) saat tidak aktif sehingga tidak merusak ukuran kontainer kontrol, dan muncul melayang (*floating pop-up*) ke arah atas panggung video secara sempurna tanpa terpotong (*zero clipping*).
 
 ### Added
 1. **Dukungan Format Subtitle `.ass` / `.ssa` & Pembersih Tag ASS Override (`backend/api/translate.py`, `frontend/js/app.js`, `PlayerActivity.java`):**
