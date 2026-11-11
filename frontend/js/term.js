@@ -41,7 +41,7 @@ var Tui = (function () {
   function saveCmdHist(h){try{localStorage.setItem("tatap_hist",JSON.stringify(h.slice(0,50)));}catch(e){}}
 
   function cmdUsage(){
-    return "perintah:\n  cari <judul> | :musim | :lanjutan | :favorit | :katalog\n  :terbaru | :season <winter|spring|summer|fall> <tahun>\n  :switch [hianime|otaku] (ganti sumber video HiAnime / Otakudesu)\n  :filter [key=val...] | :filter reset\n  :genre <slug|title> | :genre | :genre --list | :genre reset\n  :safe [on|off] (mode aman filter konten dewasa/ecchi)\n  :sfx [on|off] (efek suara taktil konsol PS5)\n  :subdelay <detik|reset> (sinkronisasi waktu subtitle, cth: :subdelay -0.5)\n  :substyle | :styler (buka dialog styler font & background subtitle)\n  :tema [toggle|terang|gelap] (ganti mode terang / gelap Apple)\n  :update (cek versi rilis terbaru secara on-demand)\n  :ai (buka modal pengaturan AI) | :apikey <key> | :model <nama> | :prompt <gaya/arahan>\n  :logs | :crt on|off|toggle | :ambient on|off|toggle\n  :riwayat | :favorit | :status | :bantuan | :q";
+    return "perintah:\n  cari <judul> | :musim | :lanjutan | :favorit | :katalog\n  :terbaru | :season <winter|spring|summer|fall> <tahun>\n  :switch [hianime|otaku] (ganti sumber video HiAnime / Otakudesu)\n  :filter [key=val...] | :filter reset\n  :genre <slug|title> | :genre | :genre --list | :genre reset\n  :safe [on|off] (mode aman filter konten dewasa/ecchi)\n  :sfx [on|off] (efek suara taktil konsol PS5)\n  :subdelay <detik|reset> (sinkronisasi waktu subtitle, cth: :subdelay -0.5)\n  :substyle | :styler (buka dialog styler font & background subtitle)\n  :tema [toggle|terang|gelap] (ganti mode terang / gelap Apple)\n  :mobile | :desktop | :device (beralih simulasi layout ponsel / desktop)\n  :update (cek versi rilis terbaru secara on-demand)\n  :ai (buka modal pengaturan AI) | :apikey <key> | :model <nama> | :prompt <gaya/arahan>\n  :logs | :crt on|off|toggle | :ambient on|off|toggle\n  :riwayat | :favorit | :status | :bantuan | :q";
   }
 
   function applyFilter(){
@@ -1484,6 +1484,24 @@ var Tui = (function () {
         if(window.TatapTheme && window.TatapTheme.toggle){
           var newTh = window.TatapTheme.toggle();
           log("Tema beralih ke: " + (newTh === "light" ? "Mode Terang (Apple Light)" : "Mode Gelap (Obsidian Dark)"), "ok");
+        }
+        break;
+      case "mobile":case "phone":case "ponsel":
+        if(window.TatapDeviceMode && window.TatapDeviceMode.set){
+          window.TatapDeviceMode.set("mobile", true);
+          log("Mode tampilan beralih ke: Ponsel / Mobile Frame", "ok");
+        }
+        break;
+      case "desktop":case "pc":
+        if(window.TatapDeviceMode && window.TatapDeviceMode.set){
+          window.TatapDeviceMode.set("desktop", true);
+          log("Mode tampilan beralih ke: Desktop / Layar Lebar", "ok");
+        }
+        break;
+      case "device":case "layout":
+        if(window.TatapDeviceMode && window.TatapDeviceMode.toggle){
+          var curM = window.TatapDeviceMode.toggle();
+          log("Mode tampilan beralih ke: " + (curM === "mobile" ? "Ponsel / Mobile Frame" : "Desktop / Layar Lebar"), "ok");
         }
         break;
       case "subdelay":case "suboffset":

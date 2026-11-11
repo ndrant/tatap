@@ -30,7 +30,14 @@
    - **Sticky Top Player & Portrait Episode Panel (`#pm-mobile-panel`):** Video player docks 16:9 at the top in portrait mode on mobile with episode selector and quick Prev/Next navigation below, expanding to 100vw x 100vh cinema mode on landscape or fullscreen.
    - **Mobile Bottom Sheet Modals:** Modals (Catalog Filter, Genre Filter, Settings) reflow into smooth bottom sheets sliding up from the bottom with 20px top rounded corners.
    - **Fluid 2-Column Poster Grid:** Formatted `.poster-grid` into a balanced 2-column layout on small phones (`< 480px`) with 2-line title clamps and clean 2:3 card aspect ratio.
-2. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
+2. **Explicit Mobile Mode Toggle & Desktop Smartphone Frame Simulation:**
+   - **Interactive Device Mode Switcher (`TatapDeviceMode`):** Added `#btn-toggle-device-mode` in header actions, `#pop-toggle-device-mode` in Apple Options popover, `#drawer-toggle-device-mode` in drawer, `#sidebar-toggle-device-mode` in sidebar, and keyboard shortcut `⌘M` / `Ctrl+M`.
+   - **Terminal Command Support:** Added `:mobile`, `:desktop`, and `:device` commands in `term.js` `doCmd` and updated `:bantuan` usage guide.
+   - **Responsive Frame Simulation (`body.mobile-mode`):** Constrains view into a 440px centered phone frame with box-shadow depth, hiding desktop sidebar/statusbar/navtabs, activating thumb-zone bottom navigation, reflowing poster grid to 2 columns, reflowing detail view vertically, and docking video player 16:9 sticky top with in-player episode navigation panel.
+   - **Zero FOUC Startup:** Added synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
+   - **Lightpanda MCP Live Verification:** Verified toggle back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
+
+3. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
    - Added multi-page GraphQL `airingSchedules` range fetcher (`monMidUtc` to `sunEndUtc`) and 7-day Monday–Sunday grouping in `php/scrapers/Anilist.php` (`Anilist::schedule`).
    - Wired `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic, day-specific anime airing buckets with `day`, `weekday`, `day_name`, `current_day`, `is_today`, and `counts`.
    - Verified live in Lightpanda: clicking Senin (7 items), Selasa (11 items, is-today), Sabtu (27 items), Minggu (32 items) dynamically re-renders results title and cards in real time with 0 console errors.

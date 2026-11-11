@@ -21,6 +21,7 @@
 - [x] **Pytest Environment Configuration**: Installed pytest in `./venv/bin/pytest` and verified `tests/test_semver.py` (5/5 PASS).
 - [x] **Regression & Staging Sync**: Expanded test suite to 84 assertions in `php tests/test_php_backend.php` (all PASS) and synced distribution via `python3 tools/build_php_web.py`.
 - [x] **Mobile Adaptive Layout & Thumb-Zone Ergonomics (Pure Native CSS Zero-Build)**: Implemented responsive mobile layout (< 768px) with Bottom Navigation Bar (5 tabs), Spotlight mobile search button in header, vertical reflow on Anime Detail Page, Sticky Top Video Player in portrait with in-player episode switcher (`#pm-mobile-panel`), Mobile Bottom Sheet modals, and fluid 2-column card grid on small phones without any npm/Tailwind dependencies.
+- [x] **Explicit Mobile Mode Toggle & Frame Simulation**: Added device mode switcher (`TatapDeviceMode`), `#btn-toggle-device-mode` in header actions, `#pop-toggle-device-mode` in Apple options popover, `#drawer-toggle-device-mode` in drawer, `#sidebar-toggle-device-mode` in sidebar, `⌘M` / `Ctrl+M` keyboard shortcut, and terminal commands `:mobile`, `:desktop`, `:device` allowing instant preview of 440px phone simulation on desktop screens. Verified live with Lightpanda MCP.
 
 ## Pending Tasks
 - [ ] **P4 — Directive Adherence**: Adhere strictly to Directive 8 (No version bump while v2.12.7 is in draft) and Directive 9 (Zero desktop/Android binary build during web iterations).

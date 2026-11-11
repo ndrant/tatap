@@ -18,7 +18,14 @@
    - Designed Sticky Top Player for mobile portrait: 16:9 player pinned at the top with dedicated in-player episode navigation drawer (`#pm-mobile-panel`), switching automatically to 100vw x 100vh immersive cinema mode when rotated to landscape or when fullscreen is triggered.
    - Converted Catalog Filter, Genre Filter, and Settings Modals into mobile Bottom Sheets sliding up from the bottom with 20px top rounded corners.
    - Formatted `.poster-grid` into a balanced 2-column layout on phones `< 480px` with 2-line title clamps and clean 2:3 card aspect ratio.
-2. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
+2. **Explicit Mobile Mode Toggle & Desktop Smartphone Frame Simulation:**
+   - Added interactive device switcher (`TatapDeviceMode`) with `#btn-toggle-device-mode` in header actions, `#pop-toggle-device-mode` in Apple options popover, `#drawer-toggle-device-mode` in drawer, `#sidebar-toggle-device-mode` in sidebar, and keyboard shortcut `⌘M` / `Ctrl+M`.
+   - Added terminal commands `:mobile`, `:desktop`, and `:device` in `term.js` `doCmd` with `:bantuan` usage guide.
+   - Constrained view in `body.mobile-mode` into a 440px centered phone frame with box-shadow depth, hiding desktop sidebar/statusbar/navtabs, activating thumb-zone bottom navigation, reflowing poster grid to 2 columns, reflowing detail view vertically, and docking video player 16:9 sticky top with in-player episode navigation panel.
+   - Added zero-FOUC synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
+   - Verified live in Lightpanda browser: toggling back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
+
+3. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
    - Added `Anilist::schedule($day, $safeMode)` to `php/scrapers/Anilist.php` implementing multi-page AniList GraphQL `airingSchedules` range queries (Monday 00:00 WIB to Sunday 23:59 WIB).
    - Grouped schedules into Monday through Sunday day buckets with time (`%H:%M WIB`), date, episode, and slug mapping.
    - Connected `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic items by requested day.

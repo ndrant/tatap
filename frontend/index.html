@@ -7,14 +7,22 @@
   (function(){
     var t = localStorage.getItem("tatap_theme") || "dark";
     document.documentElement.setAttribute("data-theme", t);
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var m = p.get("mode") || localStorage.getItem("tatap_device_mode");
+      if(m === "mobile") document.documentElement.classList.add("mobile-mode");
+    } catch(_){}
   })();
 </script>
-<link rel="stylesheet" href="/css/style.css?v=2.12.7.21">
+<link rel="stylesheet" href="/css/style.css?v=2.12.7.23">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
 <link rel="apple-touch-icon" href="/assets/icon-512.png">
 </head>
 <body class="no-crt">
+<script>
+  if(document.documentElement.classList.contains("mobile-mode")) document.body.classList.add("mobile-mode");
+</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" id="tatap-icons">
   <defs>
     <!-- Brand Mark: Sleek Geometric Viewfinder Eye (Tatap) -->
@@ -81,6 +89,12 @@
     <symbol id="icon-tv" viewBox="0 0 24 24">
       <rect x="2" y="7" width="20" height="13" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
       <polyline points="17 3 12 7 7 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </symbol>
+    <!-- Phone / Mobile -->
+    <symbol id="icon-phone" viewBox="0 0 24 24">
+      <rect x="6" y="2" width="12" height="20" rx="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      <circle cx="12" cy="18" r="1" fill="currentColor"/>
+      <line x1="10" y1="5" x2="14" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     </symbol>
     <!-- Star (Outline) -->
     <symbol id="icon-star" viewBox="0 0 24 24">
@@ -408,6 +422,10 @@
             <svg class="ui-icon"><use href="#icon-cpu"/></svg>
             <span class="sidebar-nav-label">AI Fansub</span>
           </button>
+          <button class="sidebar-nav-item" id="sidebar-toggle-device-mode" title="Beralih Mode Tampilan Ponsel / Desktop (:mobile)">
+            <svg class="ui-icon" id="sidebar-device-icon"><use href="#icon-tv"/></svg>
+            <span class="sidebar-nav-label" id="sidebar-device-label">Mode Ponsel</span>
+          </button>
           <button class="sidebar-nav-item" id="sidebar-toggle-theme" title="Ganti Mode Gelap / Terang (:tema)">
             <svg class="ui-icon" id="sidebar-theme-icon"><use href="#icon-sun"/></svg>
             <span class="sidebar-nav-label" id="sidebar-theme-label">Mode Terang</span>
@@ -444,6 +462,9 @@
     <button class="nav-tab-btn" data-view="favorit" id="tab-nav-favorit" tabindex="0">Favorit</button>
   </nav>
   <div class="head-actions">
+    <button id="btn-toggle-device-mode" class="icon-btn header-device-btn" title="Beralih Mode Tampilan (Mobile / Desktop)" aria-label="Mode Tampilan" tabindex="0">
+      <svg class="ui-icon" id="header-device-icon"><use href="#icon-tv"/></svg>
+    </button>
     <button id="btn-search-mobile" class="icon-btn header-search-btn" title="Pencarian Anime (⌘K / /)" aria-label="Cari" tabindex="0">
       <svg class="ui-icon"><use href="#icon-search"/></svg>
     </button>
@@ -489,6 +510,11 @@
       <svg class="ui-icon" id="pop-theme-icon"><use href="#icon-sun"/></svg>
       <span class="popover-item-label" id="pop-theme-label">Mode Terang</span>
       <span class="popover-shortcut">⌘T</span>
+    </button>
+    <button class="popover-item" id="pop-toggle-device-mode" role="menuitem" tabindex="0">
+      <svg class="ui-icon" id="pop-device-icon"><use href="#icon-tv"/></svg>
+      <span class="popover-item-label">Mode Tampilan</span>
+      <span class="popover-value" id="pop-device-badge">Desktop</span>
     </button>
     <button class="popover-item" id="pop-toggle-sfx" role="menuitem" tabindex="0">
       <svg class="ui-icon" id="pop-sfx-icon"><use href="#icon-volume-high"/></svg>
@@ -757,6 +783,11 @@
 
       <div class="drawer-group">
         <div class="drawer-group-label">TAMPILAN &amp; SUARA</div>
+        <button class="drawer-item" id="drawer-toggle-device-mode">
+          <span class="drawer-item-icon"><svg class="ui-icon" id="drawer-device-icon"><use href="#icon-tv"/></svg></span>
+          <span class="drawer-item-label">Mode Tampilan</span>
+          <span class="drawer-item-badge" id="drawer-device-badge">Desktop</span>
+        </button>
         <button class="drawer-item" id="drawer-toggle-theme">
           <span class="drawer-item-icon"><svg class="ui-icon" id="drawer-theme-icon"><use href="#icon-sun"/></svg></span>
           <span class="drawer-item-label" id="drawer-theme-label">Mode Terang</span>
@@ -1487,7 +1518,7 @@
 <script src="/js/vendor/artplayer.js?v=2.12.7.8"></script>
 <script src="/js/vendor/hls.min.js?v=2.12.7.8"></script>
 <script src="/js/api.js?v=2.12.7.12"></script>
-<script src="/js/term.js?v=2.12.7.13"></script>
-<script src="/js/app.js?v=2.12.7.21"></script>
+<script src="/js/term.js?v=2.12.7.23"></script>
+<script src="/js/app.js?v=2.12.7.23"></script>
 </body>
 </html>

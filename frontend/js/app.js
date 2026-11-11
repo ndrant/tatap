@@ -6488,6 +6488,12 @@ function initSidebar(){
     openAiSettingsModal();
   });
 
+  var sdm = $("sidebar-toggle-device-mode");
+  if(sdm) sdm.addEventListener("click", function(){
+    var m = TatapDeviceMode.toggle();
+    toast(m === "mobile" ? "Mode Tampilan Ponsel Aktif" : "Mode Tampilan Desktop Aktif", 1200);
+  });
+
   var stt = $("sidebar-toggle-theme");
   if(stt) stt.addEventListener("click", function(){
     var t = TatapTheme.toggle();
@@ -6834,6 +6840,102 @@ var TatapTheme = (function(){
 })();
 window.TatapTheme = TatapTheme;
 
+var TatapDeviceMode = (function(){
+  function getMode(){
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      var m = urlParams.get("mode");
+      if(m === "mobile" || m === "desktop") return m;
+    } catch(_){}
+    var saved = localStorage.getItem("tatap_device_mode");
+    if(saved === "mobile" || saved === "desktop") return saved;
+    return "auto";
+  }
+
+  function syncUI(mode){
+    var isMobile = (mode === "mobile");
+    var headBtn = $("btn-toggle-device-mode");
+    if(headBtn){
+      headBtn.setAttribute("title", isMobile ? "Mode Ponsel Aktif (Klik untuk Beralih ke Desktop)" : "Mode Desktop (Klik untuk Beralih ke Ponsel)");
+    }
+    var headIcon = $("header-device-icon");
+    if(headIcon){
+      headIcon.innerHTML = '<use href="#icon-' + (isMobile ? 'phone' : 'tv') + '"/>';
+    }
+
+    var popIcon = $("pop-device-icon");
+    if(popIcon){
+      popIcon.innerHTML = '<use href="#icon-' + (isMobile ? 'phone' : 'tv') + '"/>';
+    }
+    var popBadge = $("pop-device-badge");
+    if(popBadge){
+      popBadge.textContent = isMobile ? "Ponsel" : "Desktop";
+    }
+
+    var drawerIcon = $("drawer-device-icon");
+    if(drawerIcon){
+      drawerIcon.innerHTML = '<use href="#icon-' + (isMobile ? 'phone' : 'tv') + '"/>';
+    }
+    var drawerBadge = $("drawer-device-badge");
+    if(drawerBadge){
+      drawerBadge.textContent = isMobile ? "Ponsel" : "Desktop";
+    }
+
+    var sidebarIcon = $("sidebar-device-icon");
+    if(sidebarIcon){
+      sidebarIcon.innerHTML = '<use href="#icon-' + (isMobile ? 'phone' : 'tv') + '"/>';
+    }
+    var sidebarLabel = $("sidebar-device-label");
+    if(sidebarLabel){
+      sidebarLabel.textContent = isMobile ? "Mode Desktop" : "Mode Ponsel";
+    }
+  }
+
+  function setMode(mode, save){
+    var isMobile = (mode === "mobile");
+    if(isMobile){
+      document.body.classList.add("mobile-mode");
+      document.documentElement.classList.add("mobile-mode");
+      if(save !== false) localStorage.setItem("tatap_device_mode", "mobile");
+    } else {
+      document.body.classList.remove("mobile-mode");
+      document.documentElement.classList.remove("mobile-mode");
+      if(save !== false) {
+        if(mode === "desktop") localStorage.setItem("tatap_device_mode", "desktop");
+        else localStorage.removeItem("tatap_device_mode");
+      }
+    }
+    syncUI(mode);
+    return mode;
+  }
+
+  function toggle(){
+    var isCurrentlyMobile = document.body.classList.contains("mobile-mode");
+    var nextMode = isCurrentlyMobile ? "desktop" : "mobile";
+    setMode(nextMode, true);
+    if(window.TatapSfx) TatapSfx.play("select");
+    return nextMode;
+  }
+
+  function init(){
+    var initial = getMode();
+    if(initial === "mobile"){
+      setMode("mobile", false);
+    } else {
+      setMode("desktop", false);
+    }
+  }
+
+  return {
+    get: getMode,
+    set: setMode,
+    toggle: toggle,
+    init: init,
+    syncUI: syncUI
+  };
+})();
+window.TatapDeviceMode = TatapDeviceMode;
+
 var TatapSfx = (function(){
   var audioCtx = null;
   var lastTick = 0;
@@ -7045,6 +7147,7 @@ window.TatapSafeMode = TatapSafeMode;
 
 function init(){
   TatapTheme.set(TatapTheme.get());
+  TatapDeviceMode.init();
   TatapSfx.initUnlock();
   TatapSfx.syncUI();
   TatapSafeMode.syncUI();
@@ -7320,6 +7423,12 @@ function init(){
     var t = TatapTheme.toggle();
     toast(t === "light" ? "Mode Terang Aktif" : "Mode Gelap Aktif", 1200);
   });
+  var popDevice = $("pop-toggle-device-mode");
+  if(popDevice) popDevice.addEventListener("click", function(){
+    closePopover();
+    var next = TatapDeviceMode.toggle();
+    toast(next === "mobile" ? "Mode Tampilan Ponsel Aktif" : "Mode Tampilan Desktop Aktif", 1200);
+  });
   var popSfx = $("pop-toggle-sfx");
   if(popSfx) popSfx.addEventListener("click", function(){
     closePopover();
@@ -7352,6 +7461,10 @@ function init(){
       e.preventDefault();
       var t = TatapTheme.toggle();
       toast(t === "light" ? "Mode Terang Aktif" : "Mode Gelap Aktif", 1200);
+    } else if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "m"){
+      e.preventDefault();
+      var m = TatapDeviceMode.toggle();
+      toast(m === "mobile" ? "Mode Tampilan Ponsel Aktif" : "Mode Tampilan Desktop Aktif", 1200);
     } else if(e.key === "Escape"){
       closePopover();
       var ssm = $("sub-style-modal");
@@ -7384,6 +7497,16 @@ function init(){
       }
     });
   });
+
+  // Tombol Beralih Mode Tampilan (Mobile / Desktop) di Header
+  var headDeviceBtn = $("btn-toggle-device-mode");
+  if(headDeviceBtn){
+    headDeviceBtn.addEventListener("click", function(e){
+      e.preventDefault();
+      var next = TatapDeviceMode.toggle();
+      toast(next === "mobile" ? "Mode Tampilan Ponsel Aktif" : "Mode Tampilan Desktop Aktif", 1200);
+    });
+  }
 
   // Tombol Cari Mobile di Header
   var mobSearchBtn = $("btn-search-mobile");
@@ -7488,6 +7611,13 @@ function init(){
     }
     if(window.TatapSfx) TatapSfx.play("select");
     toast("Lewati Opening & Ending (AniSkip): " + (nextState ? "Aktif" : "Mati"), 1500, "icon-skip");
+  });
+
+  var drawerToggleDevice = $("drawer-toggle-device-mode");
+  if(drawerToggleDevice) drawerToggleDevice.addEventListener("click", function(){
+    closeDrawer();
+    var m = TatapDeviceMode.toggle();
+    toast(m === "mobile" ? "Mode Tampilan Ponsel Aktif" : "Mode Tampilan Desktop Aktif", 1200);
   });
 
   var drawerToggleTheme = $("drawer-toggle-theme");
@@ -7691,7 +7821,7 @@ function init(){
     if(window.TatapSfx && window.TatapSfx.isPlayerActive && window.TatapSfx.isPlayerActive()) return;
     var target = e.target;
     if(!target) return;
-    var el = target.closest(".poster-card, .nav-tab-btn, .mobile-tab-btn, .popover-item, .drawer-item, .seg button, .ep, .mob-ep-chip, .pager-btn, .header-drawer-btn, .header-search-btn, .ep-range-chip, .pm-mob-nav-btn");
+    var el = target.closest(".poster-card, .nav-tab-btn, .mobile-tab-btn, .popover-item, .drawer-item, .seg button, .ep, .mob-ep-chip, .pager-btn, .header-drawer-btn, .header-search-btn, .header-device-btn, .ep-range-chip, .pm-mob-nav-btn");
     if(el && window.TatapSfx){
       TatapSfx.play("tick");
     }
