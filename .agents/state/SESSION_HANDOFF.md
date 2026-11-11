@@ -25,7 +25,15 @@
    - Added zero-FOUC synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
    - Verified live in Lightpanda browser: toggling back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
 
-3. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
+3. **Adaptive 2-Tier Artplayer Controls Architecture (`.art-controls`):**
+   - Redesigned `.art-controls` layout into an adaptive two-tier structure on narrow screens ($\le 768\text{px}$ and `body.mobile-mode`):
+     - Top Tier (Row 1): Seekbar `.art-controls-center` expands to 100% full width (`order: 1; flex: 1 0 100%`) across the entire video player, allowing generous and accurate duration scrubbing.
+     - Bottom Tier (Row 2): Left side hosts navigation controls (`.art-controls-left`: Play/Pause, Prev, Next, Time); right side hosts all essential action buttons (`.art-controls-right`: Quality, Subtitle, TR-ID, AI Fansub, Settings, PiP, Fullscreen, and Close).
+   - Suppressed redundant/desktop-only controls on mobile (MPV, screenshot, web fullscreen, volume slider) to eliminate horizontal blowout and guarantee 100% containment and visibility within the player boundary.
+   - Guaranteed pause persistence (`.art-paused`), smooth hover/tap transitions, and high-z-index (`z-index: 200`) selector dropdowns.
+   - Verified live in Lightpanda browser with 100% containment, all 8 action buttons and 4 nav controls visible and accessible.
+
+4. **Jelajah Terbaru Real-Time Day Schedule (Incident 8 Healed):**
    - Added `Anilist::schedule($day, $safeMode)` to `php/scrapers/Anilist.php` implementing multi-page AniList GraphQL `airingSchedules` range queries (Monday 00:00 WIB to Sunday 23:59 WIB).
    - Grouped schedules into Monday through Sunday day buckets with time (`%H:%M WIB`), date, episode, and slug mapping.
    - Connected `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic items by requested day.

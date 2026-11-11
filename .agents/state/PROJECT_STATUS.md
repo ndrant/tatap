@@ -37,7 +37,14 @@
    - **Zero FOUC Startup:** Added synchronous early check in `index.html` `document.documentElement` reading `?mode=mobile` or `localStorage.tatap_device_mode`.
    - **Lightpanda MCP Live Verification:** Verified toggle back-and-forth between desktop and mobile modes via header button, popover item, and `:mobile` / `:desktop` terminal commands with 0 console errors.
 
-3. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
+3. **Adaptive 2-Tier Artplayer Controls Architecture (`.art-controls`):**
+   - **Full-Width Top Tier Seekbar on Small Screens ($\le 768\text{px}$ & `body.mobile-mode`):** Seekbar `.art-controls-center` dynamically expands to 100% full width (Row 1) with order `-1` / `1`, removing spatial competition with left/right buttons and giving users generous, pinpoint scrubbing.
+   - **100% Visible & Accessible Controls on Row 2:** Left side holds Play/Pause, Prev, Next, and Time; right side holds Quality, Subtitles, TR-ID, AI Fansub, Settings gear, PiP, Fullscreen, and Close.
+   - **Elimination of Horizontal Overflow & Clipping:** Desktop-only/redundant buttons (MPV, screenshot, web fullscreen, volume slider) cleanly suppressed on small touch screens, while essential controls adopt compact squircle shapes ($\ge 28\text{px}$ touch targets).
+   - **Pause Persistence & Smooth Visibility:** Controls guaranteed to stay visible and interactive when paused (`.art-paused`), sliding in smoothly on hover/tap.
+   - **Lightpanda MCP Live Verification:** Verified live in Lightpanda across desktop (1888px) and mobile (428px) viewports with all 8 action buttons and 4 nav controls visible, clickable, and contained with 0 console errors.
+
+4. **Jelajah Terbaru Real-Time Day Schedule Filtering:**
    - Added multi-page GraphQL `airingSchedules` range fetcher (`monMidUtc` to `sunEndUtc`) and 7-day Monday–Sunday grouping in `php/scrapers/Anilist.php` (`Anilist::schedule`).
    - Wired `GET /api/schedule` and `GET /api/upcoming-episodes` in `php/index.php` to return dynamic, day-specific anime airing buckets with `day`, `weekday`, `day_name`, `current_day`, `is_today`, and `counts`.
    - Verified live in Lightpanda: clicking Senin (7 items), Selasa (11 items, is-today), Sabtu (27 items), Minggu (32 items) dynamically re-renders results title and cards in real time with 0 console errors.
